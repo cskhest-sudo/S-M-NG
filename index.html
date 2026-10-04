@@ -159,7 +159,7 @@ function renderStation(){
   <td>${c.lat??''}</td><td>${c.lng??''}</td><td>${(()=>{const t=issues(c.lat,c.lng,s,c.id);return t.length?`<span class="err" title="${esc(t.join('; '))}">⚠ ${esc(t[0])}</span>`:'<span class="ok">✓</span>'})()}</td><td>${c.lat!=null?`<a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${c.lat},${c.lng}">Bản đồ</a>`:''}</td>
   <td><button onclick="custForm('${c.id}')">Sửa</button> <button class="d" onclick="delCust('${c.id}')">Xóa</button></td></tr>`}).join('');
   $('#app').innerHTML=`<div class="card"><div class="row"><button onclick="view={name:'stations'};render()">← Các trạm</button><span class="sp"></span>
-  <button class="p" onclick="custForm()">+ Thêm khách hàng</button><button class="p" onclick="exportXlsx()">⬇ Xuất Excel (mẫu A3)</button><button class="p" onclick="exportSheet()">☁ Xuất Google Sheet</button></div>
+  <button class="p" onclick="custForm()">+ Thêm khách hàng</button><button onclick="$('#impf').click()">⬆ Nhập Excel/CSV</button><input type="file" id="impf" accept=".xlsx,.csv" hidden onchange="importFile(this)"><button class="p" onclick="exportXlsx()">⬇ Xuất Excel (mẫu A3)</button><button class="p" onclick="exportSheet()">☁ Xuất Google Sheet</button></div>
   <p class="mu" style="margin-bottom:0">${esc(s.name)} · NV quản lý: ${esc(s.manager)} · ${esc(s.place)}</p><div id="msg"></div></div>
   <div class="card"><input placeholder="Tìm theo tên, mã KH, SĐT…" value="${esc(q)}" oninput="q=this.value;renderStation();const e=$('input');e.focus();e.setSelectionRange(q.length,q.length)">
   <div class="tw" style="margin-top:10px"><table><tr><th>Ký hiệu</th><th>Tên</th><th>Mã KH</th><th>SĐT</th><th>Cấp ống</th><th>X (Vĩ độ)</th><th>Y (Kinh độ)</th><th>Kiểm tra</th><th></th><th></th></tr>${rows||'<tr><td colspan="10" class="mu">Chưa có khách hàng.</td></tr>'}</table></div></div>
@@ -360,6 +360,86 @@ function saveCust(id){
 }
 function delCust(id){if(confirm('Xóa khách hàng này?')){const s=station();s.customers=s.customers.filter(c=>c.id!==id);save();renderStation()}}
 function dlg(h){const d=$('#dlg');d.innerHTML=h;d.showModal()}
+
+/* ===== NHẬP EXCEL / CSV ===== */
+const nz=t=>String(t??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+const cv=c=>{let v=c.value;if(v&&typeof v==='object'){if('result' in v)v=v.result;else if(v.richText)v=v.richText.map(t=>t.text).join('');else if(v.text)v=v.text;else if(v instanceof Date)v=v.toISOString()}return v==null?'':v};
+function mapCols(grid){
+  const m={};let hr=-1;
+  for(let r=0;r<Math.min(grid.length,15);r++)(grid[r]||[]).forEach((v,c)=>{
+    const t=nz(v);if(!t)return;let k=null;
+    if(t==='x'||t.includes('vi do')||/^(lat|latitude)\b/.test(t))k='lat';
+    else if(t==='y'||t.includes('kinh do')||/^(lon|lng|longitude)\b/.test(t))k='lng';
+    else if(/\bten (tai diem|khach|kh)\b/.test(t)||t==='ten'||t==='name'||t==='ten diem')k='name';
+    else if(/^ma (kh|khach)/.test(t)||t==='code')k='code';
+    else if(/sdt|dien thoai|phone/.test(t))k='phone';
+    else if(t.includes('cap ong'))k='pipe';
+    else if(t.includes('toa do'))k='both';
+    if(k&&!(k in m)){m[k]=c;hr=Math.max(hr,r)}
+  });
+  return {m,hr};
+}
+function extractRows(grid,mc){
+  const {m,hr}=mc,rows=[];
+  for(let r=hr+1;r<grid.length;r++){
+    const row=grid[r]||[],g=k=>m[k]==null?'':String(row[m[k]]??'').trim();
+    let lat=null,lng=null;
+    if(m.lat!=null&&m.lng!=null){lat=num(row[m.lat]);lng=num(row[m.lng])}
+    else if(m.both!=null){const x=String(row[m.both]??'').match(/(-?\d+[.,]\d+)\D+(-?\d+[.,]\d+)/);if(x){lat=num(x[1]);lng=num(x[2])}}
+    let phone=g('phone');if(/^\d{9}$/.test(phone))phone='0'+phone;
+    const name=g('name'),code=g('code');
+    if(lat==null&&lng==null&&!name&&!code&&!phone)continue;
+    rows.push({name,code,phone,pipe:g('pipe'),lat,lng});
+  }
+  return rows;
+}
+function parseCsv(t){
+  t=t.replace(/^\ufeff/,'');const first=t.split(/\r?\n/)[0]||'';
+  const d=[['\t',(first.match(/\t/g)||[]).length],[';',(first.match(/;/g)||[]).length],[',',(first.match(/,/g)||[]).length]].sort((a,b)=>b[1]-a[1])[0][0];
+  const out=[];let row=[],cur='',q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){cur+='"';i++}else q=false}else cur+=ch}
+    else if(ch==='"')q=true;
+    else if(ch===d){row.push(cur);cur=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;row.push(cur);out.push(row);row=[];cur=''}
+    else cur+=ch}
+  if(cur!==''||row.length){row.push(cur);out.push(row)}
+  return out;
+}
+let pendingImp=[];
+async function importFile(inp){
+  const f=inp.files[0];inp.value='';const m=$('#msg');if(!f)return;
+  m.className='mu';m.textContent='Đang đọc file…';
+  try{
+    const grids=[];
+    if(/\.csv$/i.test(f.name))grids.push(parseCsv(await f.text()));
+    else if(/\.xlsx$/i.test(f.name)){
+      if(!window.ExcelJS)throw new Error('Chưa tải được thư viện Excel. Kiểm tra mạng rồi thử lại.');
+      const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());
+      wb.worksheets.forEach(ws=>{const g=[];for(let r=1;r<=ws.rowCount;r++){const a=[];for(let c=1;c<=ws.columnCount;c++)a.push(cv(ws.getCell(r,c)));g.push(a)}grids.push(g)});
+    }else throw new Error('Chỉ nhận file .xlsx hoặc .csv (file .xls cũ hãy lưu lại thành .xlsx).');
+    let grid=null,mc=null;
+    for(const g of grids){const x=mapCols(g);if((x.m.lat!=null&&x.m.lng!=null)||x.m.both!=null){grid=g;mc=x;break}}
+    if(!grid)throw new Error('Không tìm thấy cột tọa độ. Hàng tiêu đề cần có cột “X” (hoặc “Vĩ độ”) và “Y” (hoặc “Kinh độ”).');
+    pendingImp=extractRows(grid,mc);
+    if(!pendingImp.length)throw new Error('Không có dòng dữ liệu nào bên dưới hàng tiêu đề.');
+    const s=station(),nc=pendingImp.filter(r=>r.lat==null||r.lng==null).length;
+    const pv=pendingImp.slice(0,5).map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.code)}</td><td>${r.lat??''}</td><td>${r.lng??''}</td></tr>`).join('');
+    m.textContent='';
+    dlg(`<h3 style="margin-top:0">Nhập từ “${esc(f.name)}”</h3>
+    <p>Đọc được <b>${pendingImp.length}</b> điểm${nc?`, trong đó <span class="err">${nc} điểm thiếu tọa độ</span>`:''}.</p>
+    <div class="tw"><table><tr><th>Tên</th><th>Mã KH</th><th>X</th><th>Y</th></tr>${pv}</table></div>
+    <p class="mu">${pendingImp.length>5?'Hiển thị 5 điểm đầu. ':''}Trạm đang có ${s.customers.length} điểm.${s.customers.length?' “Thay thế” sẽ xóa các điểm cũ và đánh lại ký hiệu từ 1 (các đoạn điểm nút đã nhập cần kiểm tra lại).':''}</p>
+    <div class="row" style="margin-top:14px"><span class="sp"></span><button onclick="$('#dlg').close()">Hủy</button>${s.customers.length?'<button class="d" onclick="applyImport(\'replace\')">Thay thế tất cả</button>':''}<button class="p" onclick="applyImport(\'add\')">${s.customers.length?'Thêm vào cuối':'Nhập'}</button></div>`);
+  }catch(e){m.className='err';m.textContent=e.message||String(e)}
+}
+function applyImport(mode){
+  const s=station(),n=pendingImp.length;
+  if(mode==='replace')s.customers=[];
+  pendingImp.forEach(r=>s.customers.push({id:uid(),name:r.name||'Điểm '+(s.customers.length+1),code:r.code,phone:r.phone,pipe:r.pipe,lat:r.lat,lng:r.lng,adjName:'',adjCode:'',adjPipe:'',feedName:'',feedCode:'',feedPipe:''}));
+  pendingImp=[];save();$('#dlg').close();renderStation();
+  const m=$('#msg');m.className='ok';m.textContent=`Đã nhập ${n} điểm.`;
+}
 
 async function exportXlsx(){
   const s=station(),m=$('#msg');
