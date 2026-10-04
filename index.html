@@ -286,9 +286,9 @@ function initMap(s){
   try{if(lmap){lmap.remove();lmap=null}}catch(e){lmap=null}
   const el=document.getElementById('lmap');if(!el||!window.L)return;
   const P=validP(s);
-  lmap=L.map(el);
-  const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}),
-  sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'});
+  lmap=L.map(el,{maxZoom:21});
+  const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:21,maxNativeZoom:19,attribution:'© OpenStreetMap'}),
+  sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:17,attribution:'Tiles © Esri'});
   osm.addTo(lmap);L.control.layers({'Bản đồ':osm,'Vệ tinh':sat}).addTo(lmap);
   const ll=P.map(p=>[p.c.lat,p.c.lng]);
   if(mapLines&&P.length>1){
@@ -298,7 +298,7 @@ function initMap(s){
   }
   P.forEach(p=>{const bad=issues(p.c.lat,p.c.lng,s,p.c.id).length>0;
     L.marker([p.c.lat,p.c.lng],{icon:L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],html:`<div class="pin${bad?' bad':''}">${p.i}</div><div class="plb">${esc(ptLabel(p.i,p.c))}</div>`})}).addTo(lmap).on('click',()=>showPt(p.c.id,p.i))});
-  if(ll.length===1)lmap.setView(ll[0],18);else lmap.fitBounds(ll,{padding:[30,30],maxZoom:19});
+  if(ll.length===1)lmap.setView(ll[0],17);else lmap.fitBounds(ll,{padding:[30,30],maxZoom:17});
 }
 function showPt(id,i){
   const c=station().customers.find(x=>x.id===id),t=issues(c.lat,c.lng,station(),id);
