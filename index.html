@@ -9,6 +9,8 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root{--bg:#f4f6f8;--card:#fff;--tx:#1b2430;--mu:#6b7785;--bd:#d9e0e7;--pr:#0b6fb8;--prt:#fff;--dg:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111820;--card:#1a232e;--tx:#e8edf2;--mu:#93a1b0;--bd:#2c3846;--pr:#4aa3e6;--prt:#08131d;--dg:#ff7b6b}}
@@ -35,6 +37,8 @@ dialog{border:1px solid var(--bd);border-radius:12px;background:var(--card);colo
 dialog::backdrop{background:rgba(0,0,0,.45)}
 #msg{font-size:13px;margin:6px 0}.err{color:var(--dg)}.ok{color:#2e8b57}
 a{color:var(--pr)}details{margin-top:10px}summary{cursor:pointer;color:var(--pr)}
+.pin{width:26px;height:26px;border-radius:50%;background:#0b6fb8;color:#fff;font:bold 12px/22px Arial;text-align:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}.pin.bad{background:#c0392b}
+.seg{transform:translate(-50%,-50%);background:rgba(255,255,255,.9);color:#000;font:bold 11px Arial;padding:1px 5px;border-radius:4px;border:1px solid #888;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -160,7 +164,7 @@ function renderStation(){
   <div class="card"><input placeholder="Tìm theo tên, mã KH, SĐT…" value="${esc(q)}" oninput="q=this.value;renderStation();const e=$('input');e.focus();e.setSelectionRange(q.length,q.length)">
   <div class="tw" style="margin-top:10px"><table><tr><th>Ký hiệu</th><th>Tên</th><th>Mã KH</th><th>SĐT</th><th>Cấp ống</th><th>X (Vĩ độ)</th><th>Y (Kinh độ)</th><th>Kiểm tra</th><th></th><th></th></tr>${rows||'<tr><td colspan="10" class="mu">Chưa có khách hàng.</td></tr>'}</table></div></div>
   <div class="card"><div class="row"><h3 style="margin:0" class="sp">Sơ đồ các điểm đã lưu</h3>${gmButtons(s)}<label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" style="width:auto" ${mapLines?'checked':''} onchange="mapLines=this.checked;renderStation()"> Nối theo thứ tự &amp; hiện chiều dài</label></div>
-  ${drawMap(s)}<div id="ptinfo" class="mu" style="margin-top:6px">Bấm vào một điểm để xem chi tiết.</div>${segTable(s)}</div>${secCard(s)}`;
+  ${drawMap(s)}<div id="ptinfo" class="mu" style="margin-top:6px">Bấm vào một điểm để xem chi tiết.</div>${segTable(s)}</div>${secCard(s)}`;initMap(s);
 }
 function parseChanges(t){const pts=[],types=[];String(t||'').split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{const m=l.match(/^(\d+)\s*[:\-,;\s]\s*(.+)$/);if(m){pts.push(m[1]);types.push(m[2])}else{pts.push(l);types.push('')}});return {pts,types}}
 function secCard(s){
@@ -252,7 +256,7 @@ async function exportCsv(){
     m.className='ok';m.textContent='Đã tạo '+fn+'. Vào mymaps.google.com → Tạo bản đồ mới → Nhập, chọn cột Latitude/Longitude và Name.'}
   catch(e){m.className='err';m.textContent=e&&e.code==='declined'?'Bạn đã hủy lưu file.':'Không xuất được file.'}
 }
-function drawMap(s){
+function drawSvg(s){
   const P=s.customers.map((c,i)=>({c,i:i+1})).filter(p=>p.c.lat!=null&&p.c.lng!=null&&Math.abs(p.c.lat)<=90&&Math.abs(p.c.lng)<=180);
   if(!P.length)return '<p class="mu">Chưa có điểm nào có tọa độ để vẽ.</p>';
   const W=720,H=460,M=40,la=P.map(p=>p.c.lat),lo=P.map(p=>p.c.lng);
@@ -269,6 +273,31 @@ function drawMap(s){
     return `<g style="cursor:pointer" onclick="showPt('${p.c.id}',${p.i})"><circle cx="${x}" cy="${y}" r="11" fill="${bad?'var(--dg)':'var(--pr)'}" stroke="var(--card)" stroke-width="2"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">${p.i}</text></g>`}).join('');
   const lab=`<text x="${M}" y="16" font-size="11" fill="var(--mu)">Bắc ↑ · X: ${b.toFixed(5)} (trên) – ${a.toFixed(5)} (dưới) · Y: ${c0.toFixed(5)} (trái) – ${d.toFixed(5)} (phải)</text>`;
   return `<div class="tw"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:480px;background:var(--bg);border:1px solid var(--bd);border-radius:8px">${g}${lab}${line}${pts}${bar}</svg></div><div class="mu">${P.length}/${s.customers.length} điểm có tọa độ · chấm đỏ là điểm cần kiểm tra lại</div>`;
+}
+let lmap=null;
+function drawMap(s){
+  if(!window.L)return drawSvg(s);
+  const P=validP(s);
+  if(!P.length)return '<p class="mu">Chưa có điểm nào có tọa độ để vẽ.</p>';
+  return `<div id="lmap" style="height:480px;border:1px solid var(--bd);border-radius:8px;position:relative;z-index:0"></div><div class="mu">${P.length}/${s.customers.length} điểm có tọa độ · chấm đỏ là điểm cần kiểm tra lại · dùng nút ở góc phải bản đồ để đổi sang ảnh vệ tinh</div>`;
+}
+function initMap(s){
+  try{if(lmap){lmap.remove();lmap=null}}catch(e){lmap=null}
+  const el=document.getElementById('lmap');if(!el||!window.L)return;
+  const P=validP(s);
+  lmap=L.map(el);
+  const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}),
+  sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'});
+  osm.addTo(lmap);L.control.layers({'Bản đồ':osm,'Vệ tinh':sat}).addTo(lmap);
+  const ll=P.map(p=>[p.c.lat,p.c.lng]);
+  if(mapLines&&P.length>1){
+    L.polyline(ll,{color:'#0b6fb8',weight:3,dashArray:'6 6'}).addTo(lmap);
+    segs(s).forEach(x=>{const A=P.find(p=>p.i===x.a).c,B=P.find(p=>p.i===x.b).c;
+      L.marker([(A.lat+B.lat)/2,(A.lng+B.lng)/2],{interactive:false,icon:L.divIcon({className:'',iconSize:[0,0],html:`<div class="seg">${fmtD(x.km)}</div>`})}).addTo(lmap)});
+  }
+  P.forEach(p=>{const bad=issues(p.c.lat,p.c.lng,s,p.c.id).length>0;
+    L.marker([p.c.lat,p.c.lng],{icon:L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],html:`<div class="pin${bad?' bad':''}">${p.i}</div>`})}).addTo(lmap).on('click',()=>showPt(p.c.id,p.i))});
+  if(ll.length===1)lmap.setView(ll[0],18);else lmap.fitBounds(ll,{padding:[30,30],maxZoom:19});
 }
 function showPt(id,i){
   const c=station().customers.find(x=>x.id===id),t=issues(c.lat,c.lng,station(),id);
