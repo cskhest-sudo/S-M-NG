@@ -54,6 +54,34 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 #ptr{position:fixed;top:8px;left:50%;transform:translate(-50%,-150%);opacity:0;transition:transform .15s,opacity .15s;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:20px;padding:6px 14px;font-size:13px;z-index:40;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 @media (prefers-reduced-motion:reduce){.spin{animation:none}#ptr{transition:none}}
 </style>
+<style>
+/* ===== Giao diện v3: gọn, dễ bấm bằng một tay ===== */
+body{font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-text-size-adjust:100%}
+header{flex-wrap:nowrap;padding:8px 12px;min-height:52px}
+header h1{flex:1 1 auto!important;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}
+#hd{flex:0 0 auto!important;flex-wrap:nowrap;gap:6px}#hd #sy{margin-right:0;font-size:12px}
+.un{font-size:13px;white-space:nowrap}@media (max-width:560px){.un{display:none}}
+main{padding:12px 12px 90px}
+button{min-height:44px;padding:8px 14px}header button{min-height:36px;padding:4px 10px}
+input,select{font-size:16px;padding:11px;min-height:44px}
+.card{border-radius:12px}
+.bar{display:flex;align-items:center;gap:8px;padding:8px 10px}.bar b{font-size:17px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs{display:flex;gap:6px;position:sticky;top:52px;z-index:9;background:var(--bg);padding:6px 0 8px}
+.tabs button{flex:1;border-radius:20px;font-weight:600;color:var(--mu)}.tabs button.on{background:var(--pr);color:var(--prt);border-color:var(--pr)}
+#qin{margin-bottom:8px}
+.it{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
+.it:active{background:var(--bg)}.it .mn{flex:1;min-width:0}.it .mn b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.it .mu{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sm{font-size:13px}
+.no{flex:0 0 36px;height:36px;border-radius:50%;background:var(--pr);color:var(--prt);display:grid;place-items:center;font-weight:700;font-size:14px}.no.bad{background:var(--dg)}
+.fab{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;border-radius:26px;padding:0 20px;min-height:52px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.chk{margin:0;display:flex;gap:6px;align-items:center;font-size:14px;color:var(--tx)}
+.menu{display:grid;gap:8px}.menu button{text-align:left}
+#lmap{height:calc(100dvh - 300px)!important;min-height:320px}
+#lmap:not(.zl) .plb,#lmap:not(.zl) .seg{display:none}
+dialog{max-height:92dvh;overflow:auto}
+@media (max-width:600px){dialog{margin:auto 0 0;width:100%;max-width:none;border-radius:16px 16px 0 0}}
+dialog>.row:last-child{position:sticky;bottom:-16px;background:var(--card);padding:10px 0 2px;margin-bottom:-2px}
+</style>
 </head>
 <body>
 <header><h1 id="ttl">📍 Tọa độ khách hàng</h1><span id="hd"></span></header>
@@ -189,7 +217,7 @@ function render(){
   view.name==='station'&&station()?renderStation():renderStations();
 }
 function renderHd(){
-  $('#hd').innerHTML=user?`<span id="sy" onclick="sync(true)"></span><span style="font-size:13px">👤 ${esc(user)}</span><button onclick="sync(true)" title="Làm mới dữ liệu" aria-label="Làm mới dữ liệu">⟳</button><button onclick="logout()">Đăng xuất</button>`:'';
+  $('#hd').innerHTML=user?`<span id="sy" onclick="sync(true)"></span><span class="un">👤 ${esc(user)}</span><button onclick="sync(true)" title="Làm mới dữ liệu" aria-label="Làm mới dữ liệu">⟳</button><button onclick="logout()">Thoát</button>`:'';
   paintStatus();
 }
 function refresh(fit){
@@ -218,8 +246,8 @@ function renderLogin(){
 function renderStations(){
   destroyMap();stView=null;
   $('#ttl').textContent='📍 Các trạm tổng kiểm tra';
-  const l=data.stations.map(s=>`<div class="item"><div><b>${esc(s.name||s.code)}</b> · ${esc(s.code)}<div class="mu">NV quản lý: ${esc(s.manager)} · ${esc(s.place)} · ${s.customers.length} khách hàng</div></div>
-  <div class="row"><button class="p" onclick="openStation('${s.id}')">Mở</button><button onclick="stationForm('${s.id}')">Sửa</button><button class="d" onclick="delStation('${s.id}')">Xóa</button></div></div>`).join('');
+  const l=data.stations.map(s=>`<div class="item" style="cursor:pointer" onclick="openStation('${s.id}')"><div><b>${esc(s.name||s.code)}</b> · ${esc(s.code)}<div class="mu">NV quản lý: ${esc(s.manager)} · ${esc(s.place)} · ${s.customers.length} khách hàng</div></div>
+  <div class="row"><button onclick="event.stopPropagation();stationForm('${s.id}')">Sửa</button></div></div>`).join('');
   const empty=!loaded
     ?(sstate==='off'?'<p class="err">Chưa tải được dữ liệu. Kiểm tra mạng rồi bấm ⟳ ở góc trên hoặc kéo màn hình xuống.</p>':'<p class="mu"><span class="spin">⟳</span> Đang tải dữ liệu từ máy chủ…</p>')
     :'<p class="mu">Chưa có trạm nào. Bấm “Thêm trạm” để bắt đầu.</p>';
@@ -232,7 +260,7 @@ function stationForm(id){
   dlg(`<h3 style="margin-top:0">${id?'Sửa':'Thêm'} trạm tổng kiểm tra</h3>
   <label>Tên trạm</label><input id="f_name" value="${esc(s.name)}"><label>Mã trạm</label><input id="f_code" value="${esc(s.code)}" placeholder="XVH102">
   <label>Nhân viên quản lý</label><input id="f_manager" value="${esc(s.manager)}"><label>Địa điểm</label><input id="f_place" value="${esc(s.place)}" placeholder="Ấp ..., Xã ..., Tỉnh/TP ...">
-  <div class="row" style="margin-top:14px"><span class="sp"></span><button onclick="$('#dlg').close()">Hủy</button><button class="p" onclick="saveStation('${id||''}')">Lưu</button></div>`);
+  <div class="row" style="margin-top:14px">${id?`<button class="d" onclick="delStation('${id}')">Xóa trạm</button>`:''}<span class="sp"></span><button onclick="$('#dlg').close()">Hủy</button><button class="p" onclick="saveStation('${id||''}')">Lưu</button></div>`);
 }
 function saveStation(id){
   const v=k=>$('#f_'+k).value.trim();
@@ -242,43 +270,59 @@ function saveStation(id){
   Object.assign(s,{name:v('name'),code:v('code').toUpperCase(),manager:v('manager'),place:v('place')});
   save();$('#dlg').close();render();
 }
-function delStation(id){const s=data.stations.find(x=>x.id===id);if(confirm(`Xóa trạm ${s.code} và toàn bộ ${s.customers.length} khách hàng?`)){data.stations=data.stations.filter(x=>x.id!==id);save();render()}}
+function delStation(id){const s=data.stations.find(x=>x.id===id);if(confirm(`Xóa trạm ${s.code} và toàn bộ ${s.customers.length} khách hàng?`)){$('#dlg').close();data.stations=data.stations.filter(x=>x.id!==id);save();render()}}
 
 /* Trang trạm: dựng khung một lần, sau đó chỉ cập nhật phần thay đổi (không vẽ lại cả trang, không dựng lại bản đồ) */
 let stView=null,shown=100,qT;
+let tab='pts';
 function renderStation(){
-  const s=station();$('#ttl').textContent='📍 Trạm '+s.code;
-  destroyMap();stView=s.id;shown=100;
-  $('#app').innerHTML=`<div class="card"><div class="row"><button onclick="view={name:'stations'};render()">← Các trạm</button><span class="sp"></span>
-  <button class="p" onclick="custForm()">+ Thêm khách hàng</button><button onclick="$('#impf').click()">⬆ Nhập Excel/CSV</button><input type="file" id="impf" accept=".xlsx,.csv" hidden onchange="importFile(this)"><button class="p" onclick="exportXlsx()">⬇ Xuất Excel (mẫu A3)</button><button class="p" onclick="exportSheet()">☁ Xuất Google Sheet</button></div>
-  <p class="mu" id="sthead" style="margin-bottom:0"></p><div id="msg"></div></div>
-  <div class="card"><input id="qin" type="search" placeholder="Tìm theo tên, mã KH, SĐT…" value="${esc(q)}" oninput="onSearch(this.value)" enterkeyhint="search" autocomplete="off">
-  <div class="tw" style="margin-top:10px"><table><thead><tr><th>Ký hiệu</th><th>Tên</th><th>Mã KH</th><th>SĐT</th><th>Cấp ống</th><th>X (Vĩ độ)</th><th>Y (Kinh độ)</th><th>Kiểm tra</th><th></th><th></th></tr></thead><tbody id="rows"></tbody></table></div><div id="more"></div></div>
-  <div class="card"><div class="row"><h3 style="margin:0" class="sp">Sơ đồ các điểm đã lưu</h3><span id="gmb"></span><label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" style="width:auto" ${mapLines?'checked':''} onchange="mapLines=this.checked;updateMap(false)"> Nối theo thứ tự &amp; hiện chiều dài</label></div>
-  <div id="mapbox"></div><div id="ptinfo" class="mu" style="margin-top:6px">Bấm vào một điểm để xem chi tiết.</div><div id="segbox"></div></div><div id="secbox"></div>`;
-  updateStation(true);
+  const s=station();$('#ttl').textContent='Trạm '+s.code;
+  destroyMap();stView=s.id;shown=100;tab='pts';
+  $('#app').innerHTML=`<div class="card bar"><button onclick="view={name:'stations'};render()" aria-label="Về danh sách trạm">←</button><b class="sp" id="sthd"></b><button onclick="exportMenu()">⋯ Nhập / Xuất</button><input type="file" id="impf" accept=".xlsx,.csv" hidden onchange="importFile(this)"></div>
+  <div class="mu" id="sthead"></div><div id="msg"></div>
+  <nav class="tabs"><button data-t="pts" onclick="setTab('pts')"></button><button data-t="map" onclick="setTab('map')">Bản đồ</button><button data-t="sec" onclick="setTab('sec')">Đoạn nút</button></nav>
+  <div class="pane" id="p_pts"><input id="qin" type="search" placeholder="Tìm theo tên, mã KH, SĐT…" value="${esc(q)}" oninput="onSearch(this.value)" enterkeyhint="search" autocomplete="off"><div id="rows"></div><div id="more"></div><button class="p fab" onclick="custForm()">＋ Thêm điểm</button></div>
+  <div class="pane" id="p_map" hidden><div class="card"><div class="row"><span id="gmb"></span><label class="chk"><input type="checkbox" style="width:auto" ${mapLines?'checked':''} onchange="mapLines=this.checked;updateMap(false)"> Nối điểm &amp; hiện chiều dài</label></div>
+  <div id="mapbox"></div><div id="ptinfo" class="mu" style="margin-top:6px">Bấm vào một điểm để xem chi tiết.</div><div id="segbox"></div></div></div>
+  <div class="pane" id="p_sec" hidden><div id="secbox"></div></div>`;
+  setTab('pts',1);updateStation(true);
+}
+function setTab(t,quiet){
+  tab=t;document.querySelectorAll('.pane').forEach(p=>p.hidden=p.id!=='p_'+t);
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  if(!quiet)scrollTo(0,0);
+  if(t==='map')updateMap(false).then(()=>{if(lmap)lmap.invalidateSize()});
+}
+function exportMenu(){
+  dlg(`<h3 style="margin-top:0">Nhập / Xuất dữ liệu</h3><div class="menu">
+  <button onclick="$('#dlg').close();$('#impf').click()">⬆ Nhập từ Excel / CSV</button>
+  <button onclick="$('#dlg').close();exportXlsx()">⬇ Xuất Excel (mẫu A3)</button>
+  <button onclick="$('#dlg').close();exportSheet()">☁ Xuất Google Sheet</button>
+  <button onclick="$('#dlg').close();exportCsv()">🗺 CSV cho Google My Maps</button></div>
+  <div class="row" style="margin-top:12px"><span class="sp"></span><button onclick="$('#dlg').close()">Đóng</button></div>`);
 }
 function updateStation(fit){
   const s=station();if(!s)return;
-  $('#sthead').textContent=`${s.name||''} · NV quản lý: ${s.manager||''} · ${s.place||''}`;
+  $('#sthd').textContent=s.name||s.code;
+  $('#sthead').textContent=`${s.code} · NV quản lý: ${s.manager||'—'} · ${s.place||'—'}`;
+  document.querySelector('.tabs [data-t=pts]').textContent=`Điểm (${s.customers.length})`;
   renderRows();
   $('#gmb').innerHTML=gmButtons(s);
   $('#segbox').innerHTML=segTable(s);
   $('#secbox').innerHTML=secCard(s);
-  updateMap(fit);
+  if(tab==='map')updateMap(fit);
 }
 function onSearch(v){clearTimeout(qT);qT=setTimeout(()=>{q=v;shown=100;renderRows()},150)}
 function renderRows(){
   const s=station(),k=q.toLowerCase(),idx=new Map(s.customers.map((c,i)=>[c,i+1]));
   const f=k?s.customers.filter(c=>((c.name||'')+' '+(c.code||'')+' '+(c.phone||'')).toLowerCase().includes(k)):s.customers;
   $('#rows').innerHTML=f.slice(0,shown).map(c=>{
-    const t=issuesOf(s,c);
-    return `<tr><td>${idx.get(c)}</td><td>${esc(c.name)}</td><td>${esc(c.code)}</td><td>${esc(c.phone)}</td><td>${esc(c.pipe)}</td>
-    <td>${c.lat??''}</td><td>${c.lng??''}</td><td>${t.length?`<span class="err" title="${esc(t.join('; '))}">⚠ ${esc(t[0])}</span>`:'<span class="ok">✓</span>'}</td><td>${c.lat!=null?`<a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${c.lat},${c.lng}">Bản đồ</a>`:''}</td>
-    <td><button onclick="custForm('${c.id}')">Sửa</button> <button class="d" onclick="delCust('${c.id}')">Xóa</button></td></tr>`}).join('')||'<tr><td colspan="10" class="mu">Chưa có khách hàng.</td></tr>';
+    const t=issuesOf(s,c),bad=t.length>0;
+    return `<div class="it" onclick="custForm('${c.id}')"><span class="no${bad?' bad':''}">${idx.get(c)}</span><div class="mn"><b>${esc(c.name)}</b><div class="mu">${[c.code,c.phone,c.pipe&&('Ống '+c.pipe)].filter(Boolean).map(esc).join(' · ')||'Chưa có mã KH / SĐT'}</div>
+    <div class="mu">${c.lat!=null?c.lat+', '+c.lng:'Chưa có tọa độ'}</div>${bad?`<div class="err sm">⚠ ${esc(t[0])}</div>`:''}</div><span class="${bad?'err':'ok'}">${bad?'⚠':'✓'}</span></div>`}).join('')||'<div class="card mu">Chưa có khách hàng. Bấm “＋ Thêm điểm” hoặc nhập từ Excel.</div>';
   $('#more').innerHTML=f.length>shown
-    ?`<div class="row" style="margin-top:8px"><span class="mu sp">Hiển thị ${shown}/${f.length}</span><button onclick="shown+=200;renderRows()">Hiện thêm</button><button onclick="shown=1e9;renderRows()">Hiện tất cả</button></div>`
-    :(k?`<div class="mu" style="margin-top:8px">${f.length}/${s.customers.length} kết quả</div>`:'');
+    ?`<div class="row" style="margin:8px 0 70px"><span class="mu sp">Hiển thị ${shown}/${f.length}</span><button onclick="shown+=200;renderRows()">Hiện thêm</button><button onclick="shown=1e9;renderRows()">Hiện tất cả</button></div>`
+    :`<div class="mu" style="margin:8px 0 70px">${k?f.length+'/'+s.customers.length+' kết quả':''}</div>`;
 }
 function parseChanges(t){const pts=[],types=[];String(t||'').split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{const m=l.match(/^(\d+)\s*[:\-,;\s]\s*(.+)$/);if(m){pts.push(m[1]);types.push(m[2])}else{pts.push(l);types.push('')}});return {pts,types}}
 function secCard(s){
@@ -411,7 +455,7 @@ function buildMap(el){
   sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{...o,maxNativeZoom:17,attribution:'Tiles © Esri'}),
   mb=L.tileLayer('https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg90?access_token=pk.eyJ1IjoiY3NraCIsImEiOiJjbXV0aHNrZmYxNHV2MzRxNHZ3Mm95ZWMzIn0.VLlN1l6UQxjaka0yDSz9IQ',{...o,maxNativeZoom:20,attribution:'© Mapbox © Maxar'});
   osm.addTo(lmap);L.control.layers({'Bản đồ':osm,'Vệ tinh':sat,'Vệ tinh nét (Mapbox)':mb}).addTo(lmap);
-  lgrp=L.layerGroup().addTo(lmap);fitted=false;
+  lgrp=L.layerGroup().addTo(lmap);fitted=false;lmap.on('zoomend',()=>el.classList.toggle('zl',lmap.getZoom()>=17));
 }
 async function updateMap(fit){
   let s=station(),box=$('#mapbox');if(!s||!box)return;
@@ -440,6 +484,7 @@ async function updateMap(fit){
   P2.forEach(p=>{const bad=issuesOf(s,p.c).length>0;
     L.marker([p.c.lat,p.c.lng],{icon:L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],html:`<div class="pin${bad?' bad':''}">${p.i}</div><div class="plb">${esc(ptLabel(p.i,p.c))}</div>`})}).addTo(lgrp).on('click',()=>showPt(p.c.id,p.i))});
   if(fit||!fitted){fitted=true;if(ll.length===1)lmap.setView(ll[0],17);else lmap.fitBounds(ll,{padding:[30,30],maxZoom:17})}
+  $('#lmap').classList.toggle('zl',lmap.getZoom()>=17);
   $('#mapnote').textContent=`${P2.length}/${s.customers.length} điểm có tọa độ · chấm đỏ là điểm cần kiểm tra lại · dùng nút ở góc phải bản đồ để đổi sang ảnh vệ tinh`;
 }
 function showPt(id,i){
@@ -456,7 +501,7 @@ function custForm(id){
   <div class="g">${i('lat','X (Vĩ độ)','inputmode="decimal"')}${i('lng','Y (Kinh độ)','inputmode="decimal"')}</div><div id="ck" style="font-size:13px;margin-top:6px"></div>
   <label>Hoặc dán tọa độ / đường dẫn Google Maps (vd: 9.3570465, 106.1106383)</label><input id="paste" oninput="parsePaste(this.value)" placeholder="Dán tại đây">
   <details><summary>Trạm tiếp giáp &amp; tuyến ống tiếp nước</summary><div class="g">${i('adjName','Trạm tiếp giáp - Tên trạm')}${i('adjCode','Mã trạm')}${i('adjPipe','Cấp ống')}${i('feedName','Tuyến ống tiếp nước - Tên trạm')}${i('feedCode','Mã trạm')}${i('feedPipe','Cấp ống')}</div></details>
-  <div class="row" style="margin-top:14px"><span class="sp"></span><button onclick="$('#dlg').close()">Hủy</button><button class="p" onclick="saveCust('${id||''}')">Lưu</button></div>`);
+  <div class="row" style="margin-top:14px">${id?`<button class="d" onclick="delCust('${id}')">Xóa</button>`:''}<span class="sp"></span><button onclick="$('#dlg').close()">Hủy</button><button class="p" onclick="saveCust('${id||''}')">Lưu</button></div>`);
 }
 const num=x=>{const n=parseFloat(String(x??'').replace(',','.'));return isNaN(n)?null:n};
 function hav(a,b,c,d){const R=6371,r=Math.PI/180,x=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
@@ -526,7 +571,7 @@ function saveCust(id){
   if(!c.name)c.name='Điểm '+(s.customers.indexOf(c)+1);
   save();$('#dlg').close();refresh();
 }
-function delCust(id){if(confirm('Xóa khách hàng này?')){const s=station();s.customers=s.customers.filter(c=>c.id!==id);save();refresh()}}
+function delCust(id){if(confirm('Xóa khách hàng này?')){$('#dlg').close();const s=station();s.customers=s.customers.filter(c=>c.id!==id);save();refresh()}}
 function dlg(h){const d=$('#dlg');d.innerHTML=h;d.showModal()}
 
 /* ===== NHẬP EXCEL / CSV ===== */
@@ -678,7 +723,7 @@ if('serviceWorker' in navigator){
   let had=!!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{
     if(!had){had=true;return}
-    if(!isDirty()&&!$('#dlg').open)location.reload();
+    if(!isDirty()&&!$('#dlg').open&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))location.reload();
     else toast('Có bản cập nhật mới, hãy mở lại ứng dụng.');
   });
   navigator.serviceWorker.addEventListener('message',e=>{
