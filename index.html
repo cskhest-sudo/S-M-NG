@@ -8,9 +8,8 @@
 <meta name="theme-color" content="#0b6fb8">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <style>
 :root{--bg:#f4f6f8;--card:#fff;--tx:#1b2430;--mu:#6b7785;--bd:#d9e0e7;--pr:#0b6fb8;--prt:#fff;--dg:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111820;--card:#1a232e;--tx:#e8edf2;--mu:#93a1b0;--bd:#2c3846;--pr:#4aa3e6;--prt:#08131d;--dg:#ff7b6b}}
@@ -39,44 +38,98 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 a{color:var(--pr)}details{margin-top:10px}summary{cursor:pointer;color:var(--pr)}
 .pin{width:26px;height:26px;border-radius:50%;background:#0b6fb8;color:#fff;font:bold 12px/22px Arial;text-align:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}.pin.bad{background:#c0392b}
 .plb{position:absolute;left:30px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.92);color:#000;font:bold 11px Arial;padding:1px 6px;border-radius:4px;border:1px solid #888;white-space:nowrap;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.3)}.seg{transform:translate(-50%,-50%);background:rgba(255,255,255,.9);color:#000;font:bold 11px Arial;padding:1px 5px;border-radius:4px;border:1px solid #888;white-space:nowrap}
+html{overscroll-behavior-y:contain}
+header{position:sticky;top:0;z-index:10}
+header .sp2{flex:1}
+button{touch-action:manipulation;transition:opacity .12s}button:active{opacity:.65}button:disabled{opacity:.55;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+#hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#sy{font-size:12px;opacity:.95;white-space:nowrap;cursor:pointer}#sy.off{font-weight:bold}
+.spin{display:inline-block;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+[hidden]{display:none!important}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 14px;border-radius:10px;z-index:50;font-size:14px;max-width:92vw;display:flex;gap:10px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+#toast button{background:transparent;color:inherit;border-color:currentColor;padding:4px 10px}
+#ptr{position:fixed;top:56px;left:50%;transform:translate(-50%,-70px);transition:transform .15s;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:20px;padding:6px 14px;font-size:13px;z-index:40;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}#ptr{transition:none}}
 </style>
 </head>
 <body>
 <header><h1 id="ttl">📍 Tọa độ khách hàng</h1><span id="hd"></span></header>
 <main id="app"></main>
 <dialog id="dlg"></dialog>
+<div id="toast" hidden></div><div id="ptr" aria-hidden="true">↓ Kéo để làm mới</div>
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>Math.random().toString(36).slice(2,10);
 const mem={};
-const st={get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]??null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}};
+const st={get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]??null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}},del(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}}};
 const ss={get(k){try{return sessionStorage.getItem(k)}catch(e){return mem['s'+k]??null}},set(k,v){try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){mem['s'+k]=v}}};
-let user=ss.get('user'),data={stations:[]},view={name:'stations'},q='';
+let user=null,token=null,data={stations:[]},view={name:'stations'},q='',loaded=false,dataVer=0;
 const station=()=>data.stations.find(s=>s.id===view.id);
 
 /* ===== KẾT NỐI MÁY CHỦ GOOGLE APPS SCRIPT ===== */
 const API='https://script.google.com/macros/s/AKfycbxMSO67JZDoKG4-ZI2xfph1wC7ehj1IdAhRSlJpx4XiO6U68WAS4NUMgMhBl4aNqwu0/exec';
-let token=ss.get('token');
-async function api(action,p={}){
+/* Phiên đăng nhập lưu bền (localStorage) để đóng/mở app không phải đăng nhập lại */
+user=st.get('ctl:user')||ss.get('user');token=st.get('ctl:token')||ss.get('token');
+if(!user||!token){user=null;token=null}
+const persist=(u,t)=>{if(u){st.set('ctl:user',u);st.set('ctl:token',t);st.set('ctl:lastuser',u)}else{st.del('ctl:user');st.del('ctl:token');ss.set('user',null);ss.set('token',null)}};
+async function api(action,p={},ms=25000){
+  const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),ms);
   try{
-    const r=await fetch(API,{method:'POST',body:JSON.stringify({action,token,...p})});
+    const r=await fetch(API,{method:'POST',body:JSON.stringify({action,token,...p}),signal:ac.signal});
     const j=await r.json();
-    if(j.error==='AUTH')forceLogout('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.');
+    if(j.error==='AUTH'&&action!=='logout'&&user)forceLogout('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại. Dữ liệu chưa đồng bộ vẫn được giữ trên máy.');
     return j;
-  }catch(e){return {ok:false,error:'Không kết nối được máy chủ'}}
+  }catch(e){return {ok:false,net:true,error:e.name==='AbortError'?'Máy chủ phản hồi quá lâu':'Không kết nối được máy chủ'}}
+  finally{clearTimeout(tm)}
 }
-const localKey=()=>'ctl:data:'+user;
-async function load(){
-  const r=await api('load');
-  if(r.ok){data=r.data&&r.data.stations?r.data:{stations:[]};st.set(localKey(),JSON.stringify(data))}
-  else{try{data=JSON.parse(st.get(localKey())||'{"stations":[]}')}catch(e){data={stations:[]}}}
+const localKey=()=>'ctl:data:'+user,dirtyKey=()=>'ctl:dirty:'+user;
+const isDirty=()=>!!user&&st.get(dirtyKey())==='1';
+const setDirty=v=>{if(user){v?st.set(dirtyKey(),'1'):st.del(dirtyKey())}};
+let sstate='',syncing=false,lastSync=0,saveT,pushP=null;
+function setStatus(s){sstate=s;paintStatus()}
+function paintStatus(){
+  const e=$('#sy');if(!e)return;
+  const M={sync:'<span class="spin">⟳</span> Đang đồng bộ',ok:'✓ Đã đồng bộ',dirty:'● Chờ đồng bộ',off:'⚠ Mất kết nối'};
+  e.innerHTML=M[sstate]||'';e.className=sstate==='off'?'off':'';
 }
-let saveT;
-const save=()=>{st.set(localKey(),JSON.stringify(data));clearTimeout(saveT);saveT=setTimeout(push,800)};
-async function push(){
+/* Lưu: ghi ngay vào máy (tức thì), đẩy lên máy chủ sau 0,8 giây */
+const save=()=>{dataVer++;setDirty(true);st.set(localKey(),JSON.stringify(data));setStatus('dirty');clearTimeout(saveT);saveT=setTimeout(push,800)};
+function push(){return pushP=(pushP||Promise.resolve()).then(doPush)}
+async function doPush(){
+  if(!user||!isDirty())return true;
+  const v=dataVer;setStatus('sync');
   const r=await api('save',{data});
-  if(!r.ok&&r.error!=='AUTH'){const m=$('#msg');if(m){m.className='err';m.textContent='Chưa lưu được lên máy chủ: '+r.error+' (đã lưu tạm trên máy).'}}
+  if(r.ok){if(dataVer===v){setDirty(false);setStatus('ok')}else setStatus('dirty');return true}
+  if(r.error!=='AUTH'){
+    setStatus(r.net?'off':'dirty');
+    const m=$('#msg');if(m){m.className='err';m.textContent='Chưa lưu được lên máy chủ: '+r.error+' (đã lưu tạm trên máy, sẽ tự đồng bộ lại).'}
+  }
+  return false;
+}
+/* Đồng bộ nền: đẩy thay đổi chưa gửi, rồi tải bản mới. Không chặn giao diện. */
+async function sync(manual){
+  if(!user||!token||syncing)return;
+  syncing=true;setStatus('sync');
+  try{
+    if(isDirty()){const ok=await push();if(!ok)return;setStatus('sync')}
+    const v=dataVer,r=await api('load');
+    if(!user)return;
+    if(!r.ok){
+      if(r.error!=='AUTH'){setStatus('off');if(manual)toast(r.error)}
+      if(!loaded)render();
+      return;
+    }
+    lastSync=Date.now();
+    if(v!==dataVer||isDirty()){setStatus(isDirty()?'dirty':'ok');return}
+    const nd=r.data&&r.data.stations?r.data:{stations:[]},js=JSON.stringify(nd),was=loaded;
+    if(js!==st.get(localKey())){
+      if($('#dlg').open){setStatus('ok');return}
+      loaded=true;data=nd;dataVer++;st.set(localKey(),js);refresh();
+    }else{loaded=true;if(!was)refresh()}
+    setStatus('ok');
+  }finally{syncing=false}
 }
 let reg=false;
 function toggleReg(e){
@@ -87,52 +140,82 @@ function toggleReg(e){
   $('#tg').textContent=reg?'Đã có tài khoản? Đăng nhập':'Chưa có tài khoản? Tạo mới';
 }
 async function doLogin(){
-  const u=$('#u').value.trim().toLowerCase(),p=$('#p').value,b=$('#lb');
-  if(!u||p.length<6){$('#msg').textContent='Nhập tên đăng nhập và mật khẩu (tối thiểu 6 ký tự).';return}
-  b.disabled=true;$('#msg').textContent='Đang xử lý…';
-  const r=await api(reg?'register':'login',{username:u,password:p,regCode:reg?$('#rc').value.trim():''});
+  const u=$('#u').value.trim().toLowerCase(),p=$('#p').value,b=$('#lb'),m=$('#msg');
+  if(!u||p.length<6){m.className='err';m.textContent='Nhập tên đăng nhập và mật khẩu (tối thiểu 6 ký tự).';return}
+  b.disabled=true;m.className='mu';m.textContent='Đang xử lý…';
+  const r=await api(reg?'register':'login',{username:u,password:p,regCode:reg?$('#rc').value.trim():''},40000);
   b.disabled=false;
-  if(!r.ok){$('#msg').textContent=r.error;return}
-  user=r.username;token=r.token;ss.set('user',user);ss.set('token',token);
-  await load();view={name:'stations'};render();
+  if(!r.ok){m.className='err';m.textContent=r.error;return}
+  user=r.username;token=r.token;persist(user,token);
+  /* Vào app ngay bằng dữ liệu đã lưu trên máy, tải bản mới ở nền */
+  let c=null;try{c=JSON.parse(st.get(localKey())||'null')}catch(e){}
+  loaded=!!(c&&c.stations);data=loaded?c:{stations:[]};dataVer++;view={name:'stations'};render();sync();
 }
-async function logout(){await api('logout');forceLogout()}
+async function logout(){
+  if(isDirty()){const ok=await push();if(!ok&&!confirm('Còn dữ liệu chưa đồng bộ lên máy chủ. Vẫn đăng xuất? (Dữ liệu vẫn được giữ trên máy và sẽ gửi lên khi bạn đăng nhập lại.)'))return}
+  api('logout');forceLogout();
+}
 function forceLogout(m){
-  user=null;token=null;ss.set('user',null);ss.set('token',null);data={stations:[]};render();
-  if(m&&$('#msg'))$('#msg').textContent=m;
+  user=null;token=null;persist(null);data={stations:[]};loaded=false;dataVer++;sstate='';
+  const d=$('#dlg');if(d&&d.open)d.close();
+  view={name:'stations'};render();
+  if(m&&$('#msg')){$('#msg').className='err';$('#msg').textContent=m}
 }
 async function exportSheet(){
   const m=$('#msg');m.className='mu';m.textContent='Đang xuất lên Google Sheet…';
   await push();
-  const r=await api('export',{station:station()});
+  const r=await api('export',{station:station()},60000);
   if(!r.ok){m.className='err';m.textContent='Lỗi: '+r.error;return}
   m.className='ok';
   m.innerHTML=`Đã xuất ${r.customers} khách hàng, ${r.sections} đoạn. <a target="_blank" rel="noopener" href="${esc(r.url)}">Mở Google Sheet</a>`;
 }
 /* ===== HẾT PHẦN MÁY CHỦ ===== */
 
+function toast(m,act){
+  const t=$('#toast');t.innerHTML=esc(m)+(act?` <button onclick="${act.js}">${act.label}</button>`:'');t.hidden=false;
+  clearTimeout(toast.t);if(!act)toast.t=setTimeout(()=>{t.hidden=true},3500);
+}
 function render(){
-  $('#hd').innerHTML=user?`<span class="mu" style="color:inherit">👤 ${esc(user)}</span> <button onclick="logout()">Đăng xuất</button>`:'';
+  renderHd();
   if(!user)return renderLogin();
   view.name==='station'&&station()?renderStation():renderStations();
 }
+function renderHd(){
+  $('#hd').innerHTML=user?`<span id="sy" onclick="sync(true)"></span><span style="font-size:13px">👤 ${esc(user)}</span><button onclick="sync(true)" title="Làm mới dữ liệu" aria-label="Làm mới dữ liệu">⟳</button><button onclick="logout()">Đăng xuất</button>`:'';
+  paintStatus();
+}
+function refresh(fit){
+  if(view.name==='station'&&station()){
+    if(stView===view.id&&$('#rows'))updateStation(fit);else renderStation();
+  }else{
+    if(view.name==='station')view={name:'stations'};
+    render();
+  }
+}
 function renderLogin(){
+  destroyMap();stView=null;
   $('#ttl').textContent='📍 Tọa độ khách hàng';
   reg=false;
+  const enter=`onkeydown="if(event.key==='Enter')doLogin()"`;
   $('#app').innerHTML=`<div class="card" style="max-width:380px;margin:30px auto"><h2 style="margin-top:0" id="lt">Đăng nhập</h2>
-  <label>Tên đăng nhập</label><input id="u" autocomplete="username"><label>Mật khẩu</label><input id="p" type="password" autocomplete="current-password">
-  <div id="rcw" hidden><label>Mã đăng ký (do quản trị cấp)</label><input id="rc"></div>
+  <label>Tên đăng nhập</label><input id="u" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" value="${esc(st.get('ctl:lastuser')||'')}" ${enter}><label>Mật khẩu</label><input id="p" type="password" autocomplete="current-password" enterkeyhint="go" ${enter}>
+  <div id="rcw" hidden><label>Mã đăng ký (do quản trị cấp)</label><input id="rc" ${enter}></div>
   <div id="msg" class="err"></div><div class="row"><button class="p sp" onclick="doLogin()" id="lb">Đăng nhập</button></div>
   <p class="mu"><a href="#" onclick="toggleReg(event)" id="tg">Chưa có tài khoản? Tạo mới</a></p>
-  <p class="mu">Dữ liệu được lưu trên máy chủ Google theo từng tài khoản.</p></div>`;
+  <p class="mu">Đăng nhập một lần, lần sau mở app là vào thẳng. Dữ liệu lưu trên máy chủ Google theo từng tài khoản.</p></div>`;
+  if(!$('#u').value)$('#u').focus();else $('#p').focus();
 }
 
 function renderStations(){
+  destroyMap();stView=null;
   $('#ttl').textContent='📍 Các trạm tổng kiểm tra';
   const l=data.stations.map(s=>`<div class="item"><div><b>${esc(s.name||s.code)}</b> · ${esc(s.code)}<div class="mu">NV quản lý: ${esc(s.manager)} · ${esc(s.place)} · ${s.customers.length} khách hàng</div></div>
   <div class="row"><button class="p" onclick="openStation('${s.id}')">Mở</button><button onclick="stationForm('${s.id}')">Sửa</button><button class="d" onclick="delStation('${s.id}')">Xóa</button></div></div>`).join('');
-  $('#app').innerHTML=`<div class="card"><div class="row"><h2 style="margin:0" class="sp">Danh sách trạm</h2><button class="p" onclick="stationForm()">+ Thêm trạm</button></div>
-  ${l||'<p class="mu">Chưa có trạm nào. Bấm “Thêm trạm” để bắt đầu.</p>'}</div><div id="msg"></div>`;
+  const empty=!loaded
+    ?(sstate==='off'?'<p class="err">Chưa tải được dữ liệu. Kiểm tra mạng rồi bấm ⟳ ở góc trên hoặc kéo màn hình xuống.</p>':'<p class="mu"><span class="spin">⟳</span> Đang tải dữ liệu từ máy chủ…</p>')
+    :'<p class="mu">Chưa có trạm nào. Bấm “Thêm trạm” để bắt đầu.</p>';
+  $('#app').innerHTML=`<div class="card"><div class="row"><h2 style="margin:0" class="sp">Danh sách trạm</h2><button class="p" onclick="stationForm()" ${loaded?'':'disabled'}>+ Thêm trạm</button></div>
+  ${l||empty}</div><div id="msg"></div>`;
 }
 function openStation(id){view={name:'station',id};q='';render()}
 function stationForm(id){
@@ -152,19 +235,41 @@ function saveStation(id){
 }
 function delStation(id){const s=data.stations.find(x=>x.id===id);if(confirm(`Xóa trạm ${s.code} và toàn bộ ${s.customers.length} khách hàng?`)){data.stations=data.stations.filter(x=>x.id!==id);save();render()}}
 
+/* Trang trạm: dựng khung một lần, sau đó chỉ cập nhật phần thay đổi (không vẽ lại cả trang, không dựng lại bản đồ) */
+let stView=null,shown=100,qT;
 function renderStation(){
   const s=station();$('#ttl').textContent='📍 Trạm '+s.code;
-  const f=s.customers.filter(c=>(c.name+c.code+c.phone).toLowerCase().includes(q.toLowerCase()));
-  const rows=f.map(c=>{const i=s.customers.indexOf(c)+1;return `<tr><td>${i}</td><td>${esc(c.name)}</td><td>${esc(c.code)}</td><td>${esc(c.phone)}</td><td>${esc(c.pipe)}</td>
-  <td>${c.lat??''}</td><td>${c.lng??''}</td><td>${(()=>{const t=issues(c.lat,c.lng,s,c.id);return t.length?`<span class="err" title="${esc(t.join('; '))}">⚠ ${esc(t[0])}</span>`:'<span class="ok">✓</span>'})()}</td><td>${c.lat!=null?`<a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${c.lat},${c.lng}">Bản đồ</a>`:''}</td>
-  <td><button onclick="custForm('${c.id}')">Sửa</button> <button class="d" onclick="delCust('${c.id}')">Xóa</button></td></tr>`}).join('');
+  destroyMap();stView=s.id;shown=100;
   $('#app').innerHTML=`<div class="card"><div class="row"><button onclick="view={name:'stations'};render()">← Các trạm</button><span class="sp"></span>
   <button class="p" onclick="custForm()">+ Thêm khách hàng</button><button onclick="$('#impf').click()">⬆ Nhập Excel/CSV</button><input type="file" id="impf" accept=".xlsx,.csv" hidden onchange="importFile(this)"><button class="p" onclick="exportXlsx()">⬇ Xuất Excel (mẫu A3)</button><button class="p" onclick="exportSheet()">☁ Xuất Google Sheet</button></div>
-  <p class="mu" style="margin-bottom:0">${esc(s.name)} · NV quản lý: ${esc(s.manager)} · ${esc(s.place)}</p><div id="msg"></div></div>
-  <div class="card"><input placeholder="Tìm theo tên, mã KH, SĐT…" value="${esc(q)}" oninput="q=this.value;renderStation();const e=$('input');e.focus();e.setSelectionRange(q.length,q.length)">
-  <div class="tw" style="margin-top:10px"><table><tr><th>Ký hiệu</th><th>Tên</th><th>Mã KH</th><th>SĐT</th><th>Cấp ống</th><th>X (Vĩ độ)</th><th>Y (Kinh độ)</th><th>Kiểm tra</th><th></th><th></th></tr>${rows||'<tr><td colspan="10" class="mu">Chưa có khách hàng.</td></tr>'}</table></div></div>
-  <div class="card"><div class="row"><h3 style="margin:0" class="sp">Sơ đồ các điểm đã lưu</h3>${gmButtons(s)}<label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" style="width:auto" ${mapLines?'checked':''} onchange="mapLines=this.checked;renderStation()"> Nối theo thứ tự &amp; hiện chiều dài</label></div>
-  ${drawMap(s)}<div id="ptinfo" class="mu" style="margin-top:6px">Bấm vào một điểm để xem chi tiết.</div>${segTable(s)}</div>${secCard(s)}`;initMap(s);
+  <p class="mu" id="sthead" style="margin-bottom:0"></p><div id="msg"></div></div>
+  <div class="card"><input id="qin" type="search" placeholder="Tìm theo tên, mã KH, SĐT…" value="${esc(q)}" oninput="onSearch(this.value)" enterkeyhint="search" autocomplete="off">
+  <div class="tw" style="margin-top:10px"><table><thead><tr><th>Ký hiệu</th><th>Tên</th><th>Mã KH</th><th>SĐT</th><th>Cấp ống</th><th>X (Vĩ độ)</th><th>Y (Kinh độ)</th><th>Kiểm tra</th><th></th><th></th></tr></thead><tbody id="rows"></tbody></table></div><div id="more"></div></div>
+  <div class="card"><div class="row"><h3 style="margin:0" class="sp">Sơ đồ các điểm đã lưu</h3><span id="gmb"></span><label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" style="width:auto" ${mapLines?'checked':''} onchange="mapLines=this.checked;updateMap(false)"> Nối theo thứ tự &amp; hiện chiều dài</label></div>
+  <div id="mapbox"></div><div id="ptinfo" class="mu" style="margin-top:6px">Bấm vào một điểm để xem chi tiết.</div><div id="segbox"></div></div><div id="secbox"></div>`;
+  updateStation(true);
+}
+function updateStation(fit){
+  const s=station();if(!s)return;
+  $('#sthead').textContent=`${s.name||''} · NV quản lý: ${s.manager||''} · ${s.place||''}`;
+  renderRows();
+  $('#gmb').innerHTML=gmButtons(s);
+  $('#segbox').innerHTML=segTable(s);
+  $('#secbox').innerHTML=secCard(s);
+  updateMap(fit);
+}
+function onSearch(v){clearTimeout(qT);qT=setTimeout(()=>{q=v;shown=100;renderRows()},150)}
+function renderRows(){
+  const s=station(),k=q.toLowerCase(),idx=new Map(s.customers.map((c,i)=>[c,i+1]));
+  const f=k?s.customers.filter(c=>((c.name||'')+' '+(c.code||'')+' '+(c.phone||'')).toLowerCase().includes(k)):s.customers;
+  $('#rows').innerHTML=f.slice(0,shown).map(c=>{
+    const t=issuesOf(s,c);
+    return `<tr><td>${idx.get(c)}</td><td>${esc(c.name)}</td><td>${esc(c.code)}</td><td>${esc(c.phone)}</td><td>${esc(c.pipe)}</td>
+    <td>${c.lat??''}</td><td>${c.lng??''}</td><td>${t.length?`<span class="err" title="${esc(t.join('; '))}">⚠ ${esc(t[0])}</span>`:'<span class="ok">✓</span>'}</td><td>${c.lat!=null?`<a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${c.lat},${c.lng}">Bản đồ</a>`:''}</td>
+    <td><button onclick="custForm('${c.id}')">Sửa</button> <button class="d" onclick="delCust('${c.id}')">Xóa</button></td></tr>`}).join('')||'<tr><td colspan="10" class="mu">Chưa có khách hàng.</td></tr>';
+  $('#more').innerHTML=f.length>shown
+    ?`<div class="row" style="margin-top:8px"><span class="mu sp">Hiển thị ${shown}/${f.length}</span><button onclick="shown+=200;renderRows()">Hiện thêm</button><button onclick="shown=1e9;renderRows()">Hiện tất cả</button></div>`
+    :(k?`<div class="mu" style="margin-top:8px">${f.length}/${s.customers.length} kết quả</div>`:'');
 }
 function parseChanges(t){const pts=[],types=[];String(t||'').split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{const m=l.match(/^(\d+)\s*[:\-,;\s]\s*(.+)$/);if(m){pts.push(m[1]);types.push(m[2])}else{pts.push(l);types.push('')}});return {pts,types}}
 function secCard(s){
@@ -215,7 +320,7 @@ function calcAll(){
   if(L.some(x=>x.len)&&!confirm('Tính lại sẽ ghi đè chiều dài đang có. Tiếp tục?'))return;
   let ok=0,bad=0;
   L.forEach(x=>{const r=lenOf(s,x.chain);if(r.n>=2&&r.miss<r.n-1){x.len=String(r.m);ok++;if(r.miss)bad++}else bad++;if(!x.pipe&&r.pipe)x.pipe=String(r.pipe)});
-  save();renderStation();const m=$('#sm2');m.className=bad?'err':'ok';m.textContent=`Đã tính ${ok}/${L.length} đoạn${bad?` · ${bad} đoạn thiếu tọa độ hoặc chưa đủ điểm (chiều dài chỉ tính phần có tọa độ)`:''}. Đây là khoảng cách đường thẳng.`;
+  save();refresh();const m=$('#sm2');m.className=bad?'err':'ok';m.textContent=`Đã tính ${ok}/${L.length} đoạn${bad?` · ${bad} đoạn thiếu tọa độ hoặc chưa đủ điểm (chiều dài chỉ tính phần có tọa độ)`:''}. Đây là khoảng cách đường thẳng.`;
 }
 function calcLen(){
   const s=station(),r=lenOf(s,$('#s_chain').value),pt={length:r.n},miss=r.miss,km=r.m/1000;
@@ -227,9 +332,9 @@ function saveSec(id){
   const v=k=>$('#s_'+k).value.trim(),s=station();s.sections=s.sections||[];
   if(!v('chain')){alert('Vui lòng nhập đoạn điểm nút, ví dụ 1-2-3');return}
   let x=s.sections.find(y=>y.id===id);if(!x){x={id:uid()};s.sections.push(x)}
-  ['chain','pipe','len','cust','note'].forEach(k=>x[k]=v(k));x.changes=chgText();save();$('#dlg').close();renderStation();
+  ['chain','pipe','len','cust','note'].forEach(k=>x[k]=v(k));x.changes=chgText();save();$('#dlg').close();refresh();
 }
-function delSec(id){if(confirm('Xóa đoạn này?')){const s=station();s.sections=s.sections.filter(x=>x.id!==id);save();renderStation()}}
+function delSec(id){if(confirm('Xóa đoạn này?')){const s=station();s.sections=s.sections.filter(x=>x.id!==id);save();refresh()}}
 let mapLines=false;
 const fmtD=km=>km<1?Math.round(km*1000)+' m':km.toFixed(2).replace('.',',')+' km';
 const validP=s=>s.customers.map((c,i)=>({c,i:i+1})).filter(p=>p.c.lat!=null&&p.c.lng!=null&&Math.abs(p.c.lat)<=90&&Math.abs(p.c.lng)<=180);
@@ -270,36 +375,63 @@ function drawSvg(s){
   const mpp=111320/sc,nice=[10,20,50,100,200,500,1000,2000,5000,10000,20000,50000].find(n=>n/mpp>70)||50000;
   const bar=`<line x1="${M}" y1="${H-14}" x2="${M+nice/mpp}" y2="${H-14}" stroke="var(--tx)" stroke-width="3"/><text x="${M+nice/mpp+6}" y="${H-10}" font-size="12" fill="var(--tx)">${nice>=1000?nice/1000+' km':nice+' m'}</text>`;
   const line=mapLines&&P.length>1?`<polyline fill="none" stroke="var(--pr)" stroke-width="1.5" stroke-dasharray="5 4" points="${P.map(p=>X(p.c.lng)+','+Y(p.c.lat)).join(' ')}"/>`+segs(s).map(x=>{const A=P.find(p=>p.i===x.a).c,B=P.find(p=>p.i===x.b).c;return `<text x="${(X(A.lng)+X(B.lng))/2}" y="${(Y(A.lat)+Y(B.lat))/2-5}" text-anchor="middle" font-size="11" fill="var(--tx)" stroke="var(--bg)" stroke-width="3" paint-order="stroke">${fmtD(x.km)}</text>`}).join(''):'';
-  const pts=P.map(p=>{const bad=issues(p.c.lat,p.c.lng,s,p.c.id).length>0,x=X(p.c.lng),y=Y(p.c.lat);
+  const pts=P.map(p=>{const bad=issuesOf(s,p.c).length>0,x=X(p.c.lng),y=Y(p.c.lat);
     return `<g style="cursor:pointer" onclick="showPt('${p.c.id}',${p.i})"><circle cx="${x}" cy="${y}" r="11" fill="${bad?'var(--dg)':'var(--pr)'}" stroke="var(--card)" stroke-width="2"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">${p.i}</text><text x="${x+15}" y="${y+4}" font-size="11" font-weight="bold" fill="var(--tx)" stroke="var(--bg)" stroke-width="3" paint-order="stroke">${esc(ptLabel(p.i,p.c))}</text></g>`}).join('');
   const lab=`<text x="${M}" y="16" font-size="11" fill="var(--mu)">Bắc ↑ · X: ${b.toFixed(5)} (trên) – ${a.toFixed(5)} (dưới) · Y: ${c0.toFixed(5)} (trái) – ${d.toFixed(5)} (phải)</text>`;
   return `<div class="tw"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:480px;background:var(--bg);border:1px solid var(--bd);border-radius:8px">${g}${lab}${line}${pts}${bar}</svg></div><div class="mu">${P.length}/${s.customers.length} điểm có tọa độ · chấm đỏ là điểm cần kiểm tra lại</div>`;
 }
-let lmap=null;
-function drawMap(s){
-  if(!window.L)return drawSvg(s);
-  const P=validP(s);
-  if(!P.length)return '<p class="mu">Chưa có điểm nào có tọa độ để vẽ.</p>';
-  return `<div id="lmap" style="height:480px;border:1px solid var(--bd);border-radius:8px;position:relative;z-index:0"></div><div class="mu">${P.length}/${s.customers.length} điểm có tọa độ · chấm đỏ là điểm cần kiểm tra lại · dùng nút ở góc phải bản đồ để đổi sang ảnh vệ tinh</div>`;
-}
-function initMap(s){
-  try{if(lmap){lmap.remove();lmap=null}}catch(e){lmap=null}
-  const el=document.getElementById('lmap');if(!el||!window.L)return;
-  const P=validP(s);
+/* ===== Tải thư viện khi cần (không chặn lúc mở app) ===== */
+const CDN='https://cdnjs.cloudflare.com/ajax/libs/';
+const addJs=h=>new Promise((ok,no)=>{const x=document.createElement('script');x.src=h;x.crossOrigin='anonymous';x.onload=ok;x.onerror=()=>no(new Error('Không tải được '+h));document.head.appendChild(x)});
+const addCss=h=>new Promise((ok,no)=>{const l=document.createElement('link');l.rel='stylesheet';l.href=h;l.crossOrigin='anonymous';l.onload=ok;l.onerror=()=>no(new Error('css'));document.head.appendChild(l)});
+const LIB={
+  leaflet:()=>window.L?0:Promise.all([addCss(CDN+'leaflet/1.9.4/leaflet.min.css'),addJs(CDN+'leaflet/1.9.4/leaflet.min.js')]),
+  excel:()=>window.ExcelJS?0:addJs(CDN+'exceljs/4.4.0/exceljs.min.js')
+};
+const libP={};
+const lib=k=>libP[k]||(libP[k]=Promise.resolve(LIB[k]()).catch(e=>{delete libP[k];throw e}));
+const prewarm=()=>{if(user&&navigator.onLine)setTimeout(()=>{lib('leaflet').catch(()=>{});lib('excel').catch(()=>{})},2500)};
+
+/* ===== Bản đồ: dựng một lần, chỉ cập nhật lớp điểm/đường ===== */
+let lmap=null,lgrp=null,fitted=false;
+function destroyMap(){try{if(lmap)lmap.remove()}catch(e){}lmap=null;lgrp=null;fitted=false}
+function buildMap(el){
   lmap=L.map(el,{maxZoom:21});
-  const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:21,maxNativeZoom:19,attribution:'© OpenStreetMap'}),
-  sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:17,attribution:'Tiles © Esri'});
-  const mb=L.tileLayer('https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg90?access_token=pk.eyJ1IjoiY3NraCIsImEiOiJjbXV0aHNrZmYxNHV2MzRxNHZ3Mm95ZWMzIn0.VLlN1l6UQxjaka0yDSz9IQ',{maxZoom:21,maxNativeZoom:20,attribution:'© Mapbox © Maxar'});
+  const o={crossOrigin:true,maxZoom:21,updateWhenIdle:true,keepBuffer:3};
+  const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{...o,maxNativeZoom:19,attribution:'© OpenStreetMap'}),
+  sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{...o,maxNativeZoom:17,attribution:'Tiles © Esri'}),
+  mb=L.tileLayer('https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg90?access_token=pk.eyJ1IjoiY3NraCIsImEiOiJjbXV0aHNrZmYxNHV2MzRxNHZ3Mm95ZWMzIn0.VLlN1l6UQxjaka0yDSz9IQ',{...o,maxNativeZoom:20,attribution:'© Mapbox © Maxar'});
   osm.addTo(lmap);L.control.layers({'Bản đồ':osm,'Vệ tinh':sat,'Vệ tinh nét (Mapbox)':mb}).addTo(lmap);
-  const ll=P.map(p=>[p.c.lat,p.c.lng]);
-  if(mapLines&&P.length>1){
-    L.polyline(ll,{color:'#0b6fb8',weight:3,dashArray:'6 6'}).addTo(lmap);
-    segs(s).forEach(x=>{const A=P.find(p=>p.i===x.a).c,B=P.find(p=>p.i===x.b).c;
-      L.marker([(A.lat+B.lat)/2,(A.lng+B.lng)/2],{interactive:false,icon:L.divIcon({className:'',iconSize:[0,0],html:`<div class="seg">${fmtD(x.km)}</div>`})}).addTo(lmap)});
+  lgrp=L.layerGroup().addTo(lmap);fitted=false;
+}
+async function updateMap(fit){
+  let s=station(),box=$('#mapbox');if(!s||!box)return;
+  const id=s.id,P=validP(s);
+  if(!P.length){destroyMap();box.innerHTML='<p class="mu">Chưa có điểm nào có tọa độ để vẽ.</p>';return}
+  if(!window.L){
+    if(!lmap)box.innerHTML='<p class="mu"><span class="spin">⟳</span> Đang tải bản đồ…</p>';
+    try{await lib('leaflet')}catch(e){
+      if(view.id!==id||!$('#mapbox'))return;
+      s=station();if(s){$('#mapbox').innerHTML=drawSvg(s)}return;
+    }
+    if(view.id!==id||!$('#mapbox'))return;
+    s=station();box=$('#mapbox');if(!s)return;
   }
-  P.forEach(p=>{const bad=issues(p.c.lat,p.c.lng,s,p.c.id).length>0;
-    L.marker([p.c.lat,p.c.lng],{icon:L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],html:`<div class="pin${bad?' bad':''}">${p.i}</div><div class="plb">${esc(ptLabel(p.i,p.c))}</div>`})}).addTo(lmap).on('click',()=>showPt(p.c.id,p.i))});
-  if(ll.length===1)lmap.setView(ll[0],17);else lmap.fitBounds(ll,{padding:[30,30],maxZoom:17});
+  const P2=validP(s);
+  let el=$('#lmap');
+  if(!lmap||!el){destroyMap();box.innerHTML=`<div id="lmap" style="height:480px;border:1px solid var(--bd);border-radius:8px;position:relative;z-index:0"></div><div class="mu" id="mapnote"></div>`;buildMap($('#lmap'))}
+  lgrp.clearLayers();
+  const ll=P2.map(p=>[p.c.lat,p.c.lng]);
+  if(mapLines&&P2.length>1){
+    L.polyline(ll,{color:'#0b6fb8',weight:3,dashArray:'6 6'}).addTo(lgrp);
+    const by=new Map(P2.map(p=>[p.i,p.c]));
+    segs(s).forEach(x=>{const A=by.get(x.a),B=by.get(x.b);
+      L.marker([(A.lat+B.lat)/2,(A.lng+B.lng)/2],{interactive:false,icon:L.divIcon({className:'',iconSize:[0,0],html:`<div class="seg">${fmtD(x.km)}</div>`})}).addTo(lgrp)});
+  }
+  P2.forEach(p=>{const bad=issuesOf(s,p.c).length>0;
+    L.marker([p.c.lat,p.c.lng],{icon:L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],html:`<div class="pin${bad?' bad':''}">${p.i}</div><div class="plb">${esc(ptLabel(p.i,p.c))}</div>`})}).addTo(lgrp).on('click',()=>showPt(p.c.id,p.i))});
+  if(fit||!fitted){fitted=true;if(ll.length===1)lmap.setView(ll[0],17);else lmap.fitBounds(ll,{padding:[30,30],maxZoom:17})}
+  $('#mapnote').textContent=`${P2.length}/${s.customers.length} điểm có tọa độ · chấm đỏ là điểm cần kiểm tra lại · dùng nút ở góc phải bản đồ để đổi sang ảnh vệ tinh`;
 }
 function showPt(id,i){
   const c=station().customers.find(x=>x.id===id),t=issues(c.lat,c.lng,station(),id);
@@ -332,6 +464,31 @@ function issues(lat,lng,s,selfId){
   if(near)o.push('Trùng vị trí với “'+near.name+'”');
   return o;
 }
+/* Kiểm tra tọa độ cho cả danh sách: tính một lần cho mỗi lần dữ liệu thay đổi (trước đây mỗi dòng duyệt lại toàn bộ danh sách) */
+let ic={v:-1,id:null,m:null};
+function issuesOf(s,c){
+  if(ic.v!==dataVer||ic.id!==s.id)ic={v:dataVer,id:s.id,m:buildIssues(s)};
+  return ic.m.get(c.id)||[];
+}
+function buildIssues(s){
+  const m=new Map(),all=s.customers.filter(c=>c.lat!=null&&c.lng!=null);
+  const mla=all.length>=3?med(all.map(c=>c.lat)):null,mlo=all.length>=3?med(all.map(c=>c.lng)):null;
+  const CS=0.0001,grid=new Map(),key=(a,b)=>a+','+b;
+  all.forEach(c=>{const k=key(Math.round(c.lat/CS),Math.round(c.lng/CS));(grid.get(k)||grid.set(k,[]).get(k)).push(c)});
+  s.customers.forEach(c=>{
+    const o=[],lat=c.lat,lng=c.lng;
+    if(lat==null||lng==null){m.set(c.id,['Thiếu X hoặc Y']);return}
+    if(Math.abs(lat)>90||Math.abs(lng)>180){m.set(c.id,['Ngoài phạm vi hợp lệ (X: -90…90, Y: -180…180)']);return}
+    if(lat>=100&&lat<=112&&lng>=6&&lng<=24)o.push('Có thể bị đảo X và Y (vĩ độ phải khoảng 8–24 ở Việt Nam)');
+    else if(lat<8||lat>24||lng<102||lng>110)o.push('Nằm ngoài lãnh thổ Việt Nam');
+    if(mla!=null){const d=hav(lat,lng,mla,mlo);if(d>20)o.push('Cách tâm các điểm khác của trạm khoảng '+d.toFixed(0)+' km')}
+    const a=Math.round(lat/CS),b=Math.round(lng/CS);let near=null;
+    for(let i=-1;i<=1&&!near;i++)for(let j=-1;j<=1&&!near;j++){const g=grid.get(key(a+i,b+j));if(g)near=g.find(x=>x.id!==c.id&&hav(lat,lng,x.lat,x.lng)<0.003)||null}
+    if(near)o.push('Trùng vị trí với “'+near.name+'”');
+    m.set(c.id,o);
+  });
+  return m;
+}
 function checkCoord(id,open){
   const lat=num($('#c_lat').value),lng=num($('#c_lng').value),e=$('#ck'),is=issues(lat,lng,station(),id);
   const u=`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,sat=`https://www.google.com/maps?q=${lat},${lng}&t=k`;
@@ -358,9 +515,9 @@ function saveCust(id){
   if(!c){c={id:uid()};s.customers.push(c)}
   F.forEach(k=>c[k]=v(k));c.lat=lat;c.lng=lng;
   if(!c.name)c.name='Điểm '+(s.customers.indexOf(c)+1);
-  save();$('#dlg').close();renderStation();
+  save();$('#dlg').close();refresh();
 }
-function delCust(id){if(confirm('Xóa khách hàng này?')){const s=station();s.customers=s.customers.filter(c=>c.id!==id);save();renderStation()}}
+function delCust(id){if(confirm('Xóa khách hàng này?')){const s=station();s.customers=s.customers.filter(c=>c.id!==id);save();refresh()}}
 function dlg(h){const d=$('#dlg');d.innerHTML=h;d.showModal()}
 
 /* ===== NHẬP EXCEL / CSV ===== */
@@ -416,7 +573,7 @@ async function importFile(inp){
     const grids=[];
     if(/\.csv$/i.test(f.name))grids.push(parseCsv(await f.text()));
     else if(/\.xlsx$/i.test(f.name)){
-      if(!window.ExcelJS)throw new Error('Chưa tải được thư viện Excel. Kiểm tra mạng rồi thử lại.');
+      await lib('excel').catch(()=>{throw new Error('Chưa tải được thư viện Excel. Kiểm tra mạng rồi thử lại.')});
       const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());
       wb.worksheets.forEach(ws=>{const g=[];for(let r=1;r<=ws.rowCount;r++){const a=[];for(let c=1;c<=ws.columnCount;c++)a.push(cv(ws.getCell(r,c)));g.push(a)}grids.push(g)});
     }else throw new Error('Chỉ nhận file .xlsx hoặc .csv (file .xls cũ hãy lưu lại thành .xlsx).');
@@ -439,13 +596,14 @@ function applyImport(mode){
   const s=station(),n=pendingImp.length;
   if(mode==='replace')s.customers=[];
   pendingImp.forEach(r=>s.customers.push({id:uid(),name:r.name||'Điểm '+(s.customers.length+1),code:r.code,phone:r.phone,pipe:r.pipe,lat:r.lat,lng:r.lng,adjName:'',adjCode:'',adjPipe:'',feedName:'',feedCode:'',feedPipe:''}));
-  pendingImp=[];save();$('#dlg').close();renderStation();
+  pendingImp=[];save();$('#dlg').close();refresh(true);
   const m=$('#msg');m.className='ok';m.textContent=`Đã nhập ${n} điểm.`;
 }
 
 async function exportXlsx(){
   const s=station(),m=$('#msg');
-  if(!window.ExcelJS){m.className='err';m.textContent='Chưa tải được thư viện xuất Excel. Kiểm tra mạng rồi thử lại.';return}
+  m.className='mu';m.textContent='Đang chuẩn bị file…';
+  try{await lib('excel')}catch(e){m.className='err';m.textContent='Chưa tải được thư viện xuất Excel. Kiểm tra mạng rồi thử lại.';return}
   const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('DIỄN GIẢI',{pageSetup:{orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0}});
   [8.3,25.3,18.1,22.7,24,20.4,19.7,22.3,16.4,15.9,23.1,16.6,12.3].forEach((w,i)=>ws.getColumn(i+1).width=w);
   const B={style:'thin'},bd={top:B,left:B,bottom:B,right:B},TNR=(sz,b)=>({name:'Times New Roman',size:sz,bold:b});
@@ -505,8 +663,51 @@ async function exportXlsx(){
   }catch(e){m.className='err';m.textContent=e&&e.code==='declined'?'Bạn đã hủy lưu file.':'Không xuất được file: '+(e.message||e)}
 }
 
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-(async()=>{if(user&&token)await load();else user=null;render()})();
+/* ===== KHỞI ĐỘNG: hiện giao diện ngay từ dữ liệu trên máy, đồng bộ ở nền ===== */
+let swReg=null;
+if('serviceWorker' in navigator){
+  let had=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!had){had=true;return}
+    if(!isDirty()&&!$('#dlg').open)location.reload();
+    else toast('Có bản cập nhật mới, hãy mở lại ứng dụng.');
+  });
+  navigator.serviceWorker.addEventListener('message',e=>{
+    if(e.data&&e.data.type==='updated')toast('Có bản cập nhật mới.',{label:'Tải lại',js:'location.reload()'});
+  });
+  navigator.serviceWorker.register('sw.js').then(r=>{swReg=r}).catch(()=>{});
+}
+(function boot(){
+  if(user&&token){
+    let c=null;try{c=JSON.parse(st.get(localKey())||'null')}catch(e){}
+    loaded=!!(c&&c.stations);data=loaded?c:{stations:[]};dataVer++;
+    render();sync();prewarm();
+  }else{user=null;render();prewarm()}
+})();
+/* Quay lại app / có mạng lại / dữ liệu chờ gửi -> tự đồng bộ */
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){
+    if(user&&Date.now()-lastSync>30000)sync();
+    if(swReg)swReg.update().catch(()=>{});
+  }else if(isDirty())push();
+});
+addEventListener('online',()=>sync());
+setInterval(()=>{if(document.visibilityState==='visible'&&user&&!syncing&&(isDirty()||Date.now()-lastSync>120000))sync()},30000);
+/* Kéo màn hình xuống để làm mới (không áp dụng trên bản đồ và hộp thoại) */
+(function(){
+  const el=$('#ptr');let y0=0,on=false,d=0;
+  const skip=t=>t.closest&&t.closest('#lmap,dialog');
+  const hide=()=>{el.style.transform='translate(-50%,-70px)'};
+  addEventListener('touchstart',e=>{on=false;if(!user||scrollY>0||e.touches.length!==1||skip(e.target))return;y0=e.touches[0].clientY;on=true;d=0},{passive:true});
+  addEventListener('touchmove',e=>{
+    if(!on)return;d=e.touches[0].clientY-y0;
+    if(d<=10||scrollY>0){hide();return}
+    el.textContent=d>140?'↑ Thả để làm mới':'↓ Kéo để làm mới';
+    el.style.transform=`translate(-50%,${Math.min(d/2.5,60)-30}px)`;
+  },{passive:true});
+  addEventListener('touchend',()=>{if(!on)return;on=false;hide();if(d>140)sync(true)});
+  addEventListener('touchcancel',()=>{on=false;hide()});
+})();
 </script>
 </body>
 </html>
