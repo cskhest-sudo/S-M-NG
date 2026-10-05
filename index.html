@@ -76,11 +76,28 @@ input,select{font-size:16px;padding:11px;min-height:44px}
 .fab{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;border-radius:26px;padding:0 20px;min-height:52px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 .chk{margin:0;display:flex;gap:6px;align-items:center;font-size:14px;color:var(--tx)}
 .menu{display:grid;gap:8px}.menu button{text-align:left}
-#lmap{height:calc(100dvh - 300px)!important;min-height:320px}
-#lmap:not(.zl) .plb,#lmap:not(.zl) .seg{display:none}
+#lmap{height:calc(100dvh - 250px)!important;min-height:340px}
 dialog{max-height:92dvh;overflow:auto}
 @media (max-width:600px){dialog{margin:auto 0 0;width:100%;max-width:none;border-radius:16px 16px 0 0}}
 dialog>.row:last-child{position:sticky;bottom:-16px;background:var(--card);padding:10px 0 2px;margin-bottom:-2px}
+/* ===== Bản đồ v4 ===== */
+.plb{max-width:160px;overflow:hidden;text-overflow:ellipsis;font-size:12px!important}
+.plb.l{left:auto;right:30px}.hid{display:none!important}
+.pin.sm{font-size:10px}.pin.sel{background:#f5a100;color:#000;transform:scale(1.25)}
+.zs .pin{transform:scale(.8)}.zs .pin.sel{transform:scale(1.05)}
+.mc{display:flex;flex-direction:column;border-radius:10px;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,.45);margin-top:8px}
+.mc button{width:44px;height:44px;min-height:44px;padding:0;border:0;border-bottom:1px solid #ddd;border-radius:0;background:#fff;color:#222;font-size:18px;line-height:1}
+.mc button:last-child{border-bottom:0}.mc button.on{background:var(--pr);color:#fff}
+#ptinfo{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-top:8px}#ptinfo:empty{display:none}
+#mapwrap.fs{position:fixed;inset:0;z-index:2000;background:var(--bg)}
+#mapwrap.fs #lmap{height:100dvh!important;min-height:0!important;border:0!important;border-radius:0!important}
+#mapwrap.fs #mapnote{display:none}
+#mapwrap.fs .leaflet-top{top:env(safe-area-inset-top,0px)}
+#mapwrap.fs #ptinfo{position:absolute;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:1100;margin:0;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+html.nsc,html.nsc body{overflow:hidden;overscroll-behavior:none}
+#toast{z-index:3000}.card:empty{display:none}
+.ico{flex:0 0 40px;width:40px;height:40px;min-height:40px;padding:0;border-radius:50%}
+#gmb{gap:8px}
 </style>
 </head>
 <body>
@@ -282,8 +299,8 @@ function renderStation(){
   <div class="mu" id="sthead"></div><div id="msg"></div>
   <nav class="tabs"><button data-t="pts" onclick="setTab('pts')"></button><button data-t="map" onclick="setTab('map')">Bản đồ</button><button data-t="sec" onclick="setTab('sec')">Đoạn nút</button></nav>
   <div class="pane" id="p_pts"><input id="qin" type="search" placeholder="Tìm theo tên, mã KH, SĐT…" value="${esc(q)}" oninput="onSearch(this.value)" enterkeyhint="search" autocomplete="off"><div id="rows"></div><div id="more"></div><button class="p fab" onclick="custForm()">＋ Thêm điểm</button></div>
-  <div class="pane" id="p_map" hidden><div class="card"><div class="row"><span id="gmb"></span><label class="chk"><input type="checkbox" style="width:auto" ${mapLines?'checked':''} onchange="mapLines=this.checked;updateMap(false)"> Nối điểm &amp; hiện chiều dài</label></div>
-  <div id="mapbox"></div><div id="ptinfo" class="mu" style="margin-top:6px">Bấm vào một điểm để xem chi tiết.</div><div id="segbox"></div></div></div>
+  <div class="pane" id="p_map" hidden><div id="mapwrap"><div id="mapbox"></div><div id="ptinfo"></div></div>
+  <div id="gmb" class="row" style="margin-top:10px"></div><div id="segbox" class="card" style="margin-top:10px"></div></div>
   <div class="pane" id="p_sec" hidden><div id="secbox"></div></div>`;
   setTab('pts',1);updateStation(true);
 }
@@ -319,7 +336,7 @@ function renderRows(){
   $('#rows').innerHTML=f.slice(0,shown).map(c=>{
     const t=issuesOf(s,c),bad=t.length>0;
     return `<div class="it" onclick="custForm('${c.id}')"><span class="no${bad?' bad':''}">${idx.get(c)}</span><div class="mn"><b>${esc(c.name)}</b><div class="mu">${[c.code,c.phone,c.pipe&&('Ống '+c.pipe)].filter(Boolean).map(esc).join(' · ')||'Chưa có mã KH / SĐT'}</div>
-    <div class="mu">${c.lat!=null?c.lat+', '+c.lng:'Chưa có tọa độ'}</div>${bad?`<div class="err sm">⚠ ${esc(t[0])}</div>`:''}</div><span class="${bad?'err':'ok'}">${bad?'⚠':'✓'}</span></div>`}).join('')||'<div class="card mu">Chưa có khách hàng. Bấm “＋ Thêm điểm” hoặc nhập từ Excel.</div>';
+    <div class="mu">${c.lat!=null?c.lat+', '+c.lng:'Chưa có tọa độ'}</div>${bad?`<div class="err sm">⚠ ${esc(t[0])}</div>`:''}</div><span class="${bad?'err':'ok'}">${bad?'⚠':'✓'}</span>${c.lat!=null?`<button class="ico" aria-label="Xem trên bản đồ" onclick="event.stopPropagation();gotoPt('${c.id}')">📍</button>`:''}</div>`}).join('')||'<div class="card mu">Chưa có khách hàng. Bấm “＋ Thêm điểm” hoặc nhập từ Excel.</div>';
   $('#more').innerHTML=f.length>shown
     ?`<div class="row" style="margin:8px 0 70px"><span class="mu sp">Hiển thị ${shown}/${f.length}</span><button onclick="shown+=200;renderRows()">Hiện thêm</button><button onclick="shown=1e9;renderRows()">Hiện tất cả</button></div>`
     :`<div class="mu" style="margin:8px 0 70px">${k?f.length+'/'+s.customers.length+' kết quả':''}</div>`;
@@ -388,7 +405,7 @@ function saveSec(id){
   ['chain','pipe','len','cust','note'].forEach(k=>x[k]=v(k));x.changes=chgText();save();$('#dlg').close();refresh();
 }
 function delSec(id){if(confirm('Xóa đoạn này?')){const s=station();s.sections=s.sections.filter(x=>x.id!==id);save();refresh()}}
-let mapLines=false;
+let mapLines=st.get('ctl:ln')==='1';
 const fmtD=km=>km<1?Math.round(km*1000)+' m':km.toFixed(2).replace('.',',')+' km';
 const validP=s=>s.customers.map((c,i)=>({c,i:i+1})).filter(p=>p.c.lat!=null&&p.c.lng!=null&&Math.abs(p.c.lat)<=90&&Math.abs(p.c.lng)<=180);
 function ptLabel(i,c){return i+'. '+(c.name||'')}
@@ -446,23 +463,85 @@ const lib=k=>libP[k]||(libP[k]=Promise.resolve(LIB[k]()).catch(e=>{delete libP[k
 const prewarm=()=>{if(user&&navigator.onLine)setTimeout(()=>{lib('leaflet').catch(()=>{});lib('excel').catch(()=>{})},2500)};
 
 /* ===== Bản đồ: dựng một lần, chỉ cập nhật lớp điểm/đường ===== */
-let lmap=null,lgrp=null,fitted=false;
-function destroyMap(){try{if(lmap)lmap.remove()}catch(e){}lmap=null;lgrp=null;fitted=false}
+let lmap=null,lgrp=null,gpsGrp=null,fitted=false,lbls=[],pins=[],selId=null,fsOn=false,mapLabels=st.get('ctl:lbl')!=='0';
+function destroyMap(){
+  try{if(lmap)lmap.remove()}catch(e){}lmap=null;lgrp=null;gpsGrp=null;fitted=false;lbls=[];pins=[];selId=null;
+  if(fsOn){fsOn=false;document.documentElement.classList.remove('nsc');if(history.state&&history.state.fs)history.back()}
+}
+/* Toàn màn hình: nút Back của điện thoại cũng thoát được */
+function mapFs(on){
+  const w=$('#mapwrap');if(!w)return;on=on===undefined?!fsOn:!!on;if(on===fsOn)return;
+  fsOn=on;w.classList.toggle('fs',on);document.documentElement.classList.toggle('nsc',on);
+  if(on)history.pushState({fs:1},'');else if(history.state&&history.state.fs)history.back();
+  const b=$('#mc_fs');if(b){b.textContent=on?'✕':'⛶';b.title=on?'Thoát toàn màn hình':'Toàn màn hình'}
+  setTimeout(()=>{if(lmap){lmap.invalidateSize();declutter()}},60);
+}
+addEventListener('popstate',()=>{if(fsOn)mapFs(false)});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&fsOn)mapFs(false)});
+function mapCtl(){
+  const C=L.control({position:'topleft'});
+  C.onAdd=()=>{
+    const d=L.DomUtil.create('div','mc');
+    d.innerHTML=`<button id="mc_fs" type="button" title="${fsOn?'Thoát toàn màn hình':'Toàn màn hình'}" onclick="mapFs()">${fsOn?'✕':'⛶'}</button><button type="button" title="Xem tất cả điểm" onclick="mapFit()">⤢</button><button id="mc_lb" type="button" title="Hiện / ẩn tên khách hàng" onclick="toggleLbl()" class="${mapLabels?'on':''}">Aa</button><button id="mc_ln" type="button" title="Nối điểm &amp; hiện chiều dài" onclick="toggleLines()" class="${mapLines?'on':''}">〰</button><button id="mc_gp" type="button" title="Vị trí của tôi" onclick="mapLocate()">◎</button>`;
+    L.DomEvent.disableClickPropagation(d);return d};
+  return C;
+}
+function toggleLbl(){mapLabels=!mapLabels;st.set('ctl:lbl',mapLabels?'1':'0');const b=$('#mc_lb');if(b)b.classList.toggle('on',mapLabels);declutter()}
+function toggleLines(){mapLines=!mapLines;st.set('ctl:ln',mapLines?'1':'0');const b=$('#mc_ln');if(b)b.classList.toggle('on',mapLines);updateMap(false)}
+function mapFit(){const s=station();if(!lmap||!s)return;const ll=validP(s).map(p=>[p.c.lat,p.c.lng]);if(!ll.length)return;ll.length===1?lmap.setView(ll[0],18):lmap.fitBounds(ll,{padding:[40,40],maxZoom:18})}
+function mapLocate(){
+  if(!lmap)return;const b=$('#mc_gp');
+  if(!navigator.geolocation){toast('Thiết bị không hỗ trợ GPS.');return}
+  b.classList.add('on');
+  navigator.geolocation.getCurrentPosition(p=>{
+    b.classList.remove('on');if(!lmap)return;
+    const ll=[p.coords.latitude,p.coords.longitude];gpsGrp.clearLayers();
+    L.circle(ll,{radius:p.coords.accuracy,color:'#1a73e8',weight:1,fillOpacity:.12,interactive:false}).addTo(gpsGrp);
+    L.circleMarker(ll,{radius:7,color:'#fff',weight:2,fillColor:'#1a73e8',fillOpacity:1,interactive:false}).addTo(gpsGrp);
+    lmap.setView(ll,Math.max(lmap.getZoom(),18));
+  },e=>{b.classList.remove('on');toast('Không lấy được GPS: '+e.message)},{enableHighAccuracy:true,timeout:20000});
+}
 function buildMap(el){
   lmap=L.map(el,{maxZoom:21});
   const o={crossOrigin:true,maxZoom:21,updateWhenIdle:true,keepBuffer:3};
   const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{...o,maxNativeZoom:19,attribution:'© OpenStreetMap'}),
   sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{...o,maxNativeZoom:17,attribution:'Tiles © Esri'}),
   mb=L.tileLayer('https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg90?access_token=pk.eyJ1IjoiY3NraCIsImEiOiJjbXV0aHNrZmYxNHV2MzRxNHZ3Mm95ZWMzIn0.VLlN1l6UQxjaka0yDSz9IQ',{...o,maxNativeZoom:20,attribution:'© Mapbox © Maxar'});
-  osm.addTo(lmap);L.control.layers({'Bản đồ':osm,'Vệ tinh':sat,'Vệ tinh nét (Mapbox)':mb}).addTo(lmap);
-  lgrp=L.layerGroup().addTo(lmap);fitted=false;lmap.on('zoomend',()=>el.classList.toggle('zl',lmap.getZoom()>=17));
+  const base={'Bản đồ':osm,'Vệ tinh':sat,'Vệ tinh nét (Mapbox)':mb};(base[st.get('ctl:base')]||osm).addTo(lmap);L.control.layers(base).addTo(lmap);mapCtl().addTo(lmap);lmap.on('baselayerchange',e=>st.set('ctl:base',e.name));
+  lgrp=L.layerGroup().addTo(lmap);gpsGrp=L.layerGroup().addTo(lmap);fitted=false;
+  lmap.on('zoomend',()=>el.classList.toggle('zs',lmap.getZoom()<17));lmap.on('zoomend moveend',declutter);lmap.on('click',()=>{if(selId)selPt(null)});
+}
+
+const lblText=c=>{const n=(c.name||'').trim();return /^Điểm \d+$/.test(n)?(c.code||''):n};
+/* Tên hiển thị luôn, nhưng tự ẩn nhãn nào bị đè lên điểm/nhãn khác (ưu tiên: điểm đang chọn, điểm lỗi, rồi theo thứ tự). Zoom gần hơn sẽ hiện thêm. */
+function declutter(){
+  if(!lmap||!lbls.length)return;
+  const sz=lmap.getSize(),lab=[],ov=(a,b)=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
+  const pr=pins.map(p=>{const q=lmap.latLngToContainerPoint(p.ll);return {id:p.id,r:[q.x-13,q.y-13,q.x+13,q.y+13]}});
+  const free=(r,own)=>!lab.some(b=>ov(r,b))&&!pr.some(p=>p.id!==own&&ov(r,p.r));
+  const inView=r=>r[2]>0&&r[0]<sz.x&&r[3]>0&&r[1]<sz.y;
+  lbls.forEach(o=>{
+    const m=o.mk.getElement();if(!m)return;
+    const e=o.el||(o.el=o.kind==='seg'?m:m.querySelector('.plb'));if(!e)return;
+    const q=lmap.latLngToContainerPoint(o.ll),w=Math.min(o.kind==='seg'?90:160,o.txt.length*6.8+14);
+    let vis=false,left=false,r;
+    if(o.kind==='seg'){r=[q.x-w/2,q.y-9,q.x+w/2,q.y+9];vis=mapLines&&inView(r)&&free(r,null)}
+    else if(mapLabels||o.sel){
+      r=[q.x+17,q.y-10,q.x+17+w,q.y+10];
+      if(r[2]>sz.x-4){const r2=[q.x-17-w,q.y-10,q.x-17,q.y+10];if(o.sel||free(r2,o.id)){r=r2;left=true}}
+      vis=inView(r)&&(o.sel||free(r,o.id));
+    }
+    if(vis)lab.push(r);
+    e.classList.toggle('hid',!vis);
+    if(o.kind!=='seg')e.classList.toggle('l',left);
+  });
 }
 async function updateMap(fit){
   let s=station(),box=$('#mapbox');if(!s||!box)return;
   const id=s.id,P=validP(s);
-  if(!P.length){destroyMap();box.innerHTML='<p class="mu">Chưa có điểm nào có tọa độ để vẽ.</p>';return}
+  if(!P.length){destroyMap();box.innerHTML='<p class="mu" style="padding:12px">Chưa có điểm nào có tọa độ để vẽ.</p>';return}
   if(!window.L){
-    if(!lmap)box.innerHTML='<p class="mu"><span class="spin">⟳</span> Đang tải bản đồ…</p>';
+    if(!lmap)box.innerHTML='<p class="mu" style="padding:12px"><span class="spin">⟳</span> Đang tải bản đồ…</p>';
     try{await lib('leaflet')}catch(e){
       if(view.id!==id||!$('#mapbox'))return;
       s=station();if(s){$('#mapbox').innerHTML=drawSvg(s)}return;
@@ -472,24 +551,47 @@ async function updateMap(fit){
   }
   const P2=validP(s);
   let el=$('#lmap');
-  if(!lmap||!el){destroyMap();box.innerHTML=`<div id="lmap" style="height:480px;border:1px solid var(--bd);border-radius:8px;position:relative;z-index:0"></div><div class="mu" id="mapnote"></div>`;buildMap($('#lmap'))}
-  lgrp.clearLayers();
+  if(!lmap||!el){destroyMap();box.innerHTML=`<div id="lmap" style="height:480px;border:1px solid var(--bd);border-radius:10px;position:relative;z-index:0"></div><div class="mu" id="mapnote"></div>`;buildMap($('#lmap'))}
+  lgrp.clearLayers();lbls=[];pins=[];
   const ll=P2.map(p=>[p.c.lat,p.c.lng]);
   if(mapLines&&P2.length>1){
-    L.polyline(ll,{color:'#0b6fb8',weight:3,dashArray:'6 6'}).addTo(lgrp);
+    L.polyline(ll,{color:'#fff',weight:7,opacity:.85,interactive:false}).addTo(lgrp);
+    L.polyline(ll,{color:'#0b6fb8',weight:3,dashArray:'6 6',interactive:false}).addTo(lgrp);
     const by=new Map(P2.map(p=>[p.i,p.c]));
-    segs(s).forEach(x=>{const A=by.get(x.a),B=by.get(x.b);
-      L.marker([(A.lat+B.lat)/2,(A.lng+B.lng)/2],{interactive:false,icon:L.divIcon({className:'',iconSize:[0,0],html:`<div class="seg">${fmtD(x.km)}</div>`})}).addTo(lgrp)});
+    segs(s).forEach(x=>{const A=by.get(x.a),B=by.get(x.b),pos=[(A.lat+B.lat)/2,(A.lng+B.lng)/2],t=fmtD(x.km);
+      const mk=L.marker(pos,{interactive:false,keyboard:false,icon:L.divIcon({className:'',iconSize:[0,0],html:`<div class="seg">${t}</div>`})}).addTo(lgrp);
+      lbls.push({kind:'seg',ll:pos,txt:t,pri:3,mk})});
   }
-  P2.forEach(p=>{const bad=issuesOf(s,p.c).length>0;
-    L.marker([p.c.lat,p.c.lng],{icon:L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],html:`<div class="pin${bad?' bad':''}">${p.i}</div><div class="plb">${esc(ptLabel(p.i,p.c))}</div>`})}).addTo(lgrp).on('click',()=>showPt(p.c.id,p.i))});
-  if(fit||!fitted){fitted=true;if(ll.length===1)lmap.setView(ll[0],17);else lmap.fitBounds(ll,{padding:[30,30],maxZoom:17})}
-  $('#lmap').classList.toggle('zl',lmap.getZoom()>=17);
-  $('#mapnote').textContent=`${P2.length}/${s.customers.length} điểm có tọa độ · chấm đỏ là điểm cần kiểm tra lại · dùng nút ở góc phải bản đồ để đổi sang ảnh vệ tinh`;
+  P2.forEach(p=>{
+    const c=p.c,bad=issuesOf(s,c).length>0,sel=c.id===selId,t=lblText(c),pos=[c.lat,c.lng];
+    const mk=L.marker(pos,{zIndexOffset:sel?2000:bad?500:0,icon:L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],html:`<div class="pin${bad?' bad':''}${sel?' sel':''}${p.i>99?' sm':''}">${p.i}</div>${t?`<div class="plb">${esc(t)}</div>`:''}`})}).addTo(lgrp).on('click',()=>showPt(c.id,p.i));
+    pins.push({id:c.id,ll:pos});
+    if(t)lbls.push({kind:'pt',id:c.id,ll:pos,txt:t,sel,pri:sel?0:bad?1:2,mk});
+  });
+  lbls.sort((a,b)=>a.pri-b.pri);
+  if(fit||!fitted){fitted=true;if(ll.length===1)lmap.setView(ll[0],18);else lmap.fitBounds(ll,{padding:[40,40],maxZoom:18})}
+  $('#lmap').classList.toggle('zs',lmap.getZoom()<17);
+  declutter();
+  const sp=selId&&P2.find(x=>x.c.id===selId);
+  if(sp)fillInfo(sp.c,sp.i);else if(selId){selId=null;$('#ptinfo').innerHTML=''}
+  $('#mapnote').textContent=`${P2.length}/${s.customers.length} điểm có tọa độ · chấm đỏ là điểm cần kiểm tra lại · nút ⛶ để xem toàn màn hình`;
 }
-function showPt(id,i){
-  const c=station().customers.find(x=>x.id===id),t=issues(c.lat,c.lng,station(),id);
-  $('#ptinfo').innerHTML=`<b>${i}. ${esc(c.name)}</b> ${esc(c.code)} ${esc(c.phone)} · ${c.lat}, ${c.lng} · <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${c.lat},${c.lng}">Mở Google Maps</a> · <a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${c.lat},${c.lng}&t=k">Ảnh vệ tinh</a> · <a href="#" onclick="event.preventDefault();custForm('${id}')">Sửa</a>${t.length?`<div class="err">⚠ ${esc(t.join('; '))}</div>`:''}`;
+function fillInfo(c,i){
+  const s=station(),t=issues(c.lat,c.lng,s,c.id);
+  $('#ptinfo').innerHTML=`<div class="row"><b class="sp">${i}. ${esc(c.name)}</b><button onclick="selPt(null)" aria-label="Đóng" style="min-height:36px">✕</button></div>
+  <div class="mu">${[c.code,c.phone,c.pipe&&('Ống '+c.pipe)].filter(Boolean).map(esc).join(' · ')||'Chưa có mã KH / SĐT'}</div><div class="mu">${c.lat}, ${c.lng}</div>${t.length?`<div class="err sm">⚠ ${esc(t.join('; '))}</div>`:''}
+  <div class="row" style="margin-top:8px"><a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}"><button type="button" class="p">Chỉ đường</button></a><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${c.lat},${c.lng}&t=k"><button type="button">Ảnh vệ tinh</button></a><button type="button" onclick="custForm('${c.id}')">Sửa</button></div>`;
+}
+async function showPt(id,i){
+  const c=station().customers.find(x=>x.id===id);if(!c)return;
+  selId=id;fillInfo(c,i);
+  if(lmap){await updateMap(false);if(lmap&&fsOn){const q=lmap.latLngToContainerPoint([c.lat,c.lng]),h=lmap.getSize().y;if(q.y>h-210)lmap.panBy([0,q.y-(h-210)])}}
+}
+function selPt(id){selId=id;if(!id)$('#ptinfo').innerHTML='';if(lmap)updateMap(false)}
+async function gotoPt(id){
+  const s=station(),i=s.customers.findIndex(c=>c.id===id),c=s.customers[i];if(!c||c.lat==null)return;
+  setTab('map');await updateMap(false);if(!lmap)return;
+  lmap.setView([c.lat,c.lng],19);showPt(id,i+1);
 }
 const F=['name','code','phone','pipe','lat','lng','adjName','adjCode','adjPipe','feedName','feedCode','feedPipe'];
 function custForm(id){
@@ -750,7 +852,7 @@ setInterval(()=>{if(document.visibilityState==='visible'&&user&&!syncing&&(isDir
 /* Kéo màn hình xuống để làm mới (không áp dụng trên bản đồ và hộp thoại) */
 (function(){
   const el=$('#ptr');let y0=0,on=false,d=0;
-  const skip=t=>t.closest&&t.closest('#lmap,dialog');
+  const skip=t=>t.closest&&t.closest('#mapwrap,dialog');
   const hide=()=>{el.style.transform='translate(-50%,-150%)';el.style.opacity=0};
   addEventListener('touchstart',e=>{on=false;if(!user||scrollY>0||e.touches.length!==1||skip(e.target))return;y0=e.touches[0].clientY;on=true;d=0},{passive:true});
   addEventListener('touchmove',e=>{
