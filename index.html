@@ -1,991 +1,207 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<title>Tọa độ khách hàng - Trạm tổng kiểm tra</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b6fb8">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="preconnect" href="https://script.google.com">
-<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0a63c9"><title>Bảng chiết tính</title>
 <style>
-:root{--bg:#f4f6f8;--card:#fff;--tx:#1b2430;--mu:#6b7785;--bd:#d9e0e7;--pr:#0b6fb8;--prt:#fff;--dg:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111820;--card:#1a232e;--tx:#e8edf2;--mu:#93a1b0;--bd:#2c3846;--pr:#4aa3e6;--prt:#08131d;--dg:#ff7b6b}}
-:root[data-theme="dark"]{--bg:#111820;--card:#1a232e;--tx:#e8edf2;--mu:#93a1b0;--bd:#2c3846;--pr:#4aa3e6;--prt:#08131d;--dg:#ff7b6b}
-*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 Arial,Helvetica,sans-serif}
-header{background:var(--pr);color:var(--prt);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-header h1{font-size:17px;margin:0;flex:1 1 100%}
-header button{padding:6px 10px}
-@media (min-width:700px){header h1{flex:1 1 auto}#hd{flex:0 0 auto!important}}
-main{max-width:1000px;margin:0 auto;padding:14px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px}
-button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 12px;border-radius:8px;cursor:pointer}
-button.p{background:var(--pr);color:var(--prt);border-color:var(--pr)}
-button.d{color:var(--dg)}header button{background:transparent;color:var(--prt);border-color:var(--prt)}
-input,select{font:inherit;width:100%;padding:9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx)}
-label{display:block;font-size:13px;color:var(--mu);margin:8px 0 3px}
-.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 12px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.sp{flex:1}
-.mu{color:var(--mu);font-size:13px}
-.item{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--bd);flex-wrap:wrap}
-.item:first-child{border-top:0}
-.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{border:1px solid var(--bd);padding:6px 8px;text-align:left;white-space:nowrap}th{background:var(--bg)}
-dialog{border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);width:min(560px,94vw);padding:16px}
-dialog::backdrop{background:rgba(0,0,0,.45)}
-#msg{font-size:13px;margin:6px 0}.err{color:var(--dg)}.ok{color:#2e8b57}
-a{color:var(--pr)}details{margin-top:10px}summary{cursor:pointer;color:var(--pr)}
-.pin{width:26px;height:26px;border-radius:50%;background:#0b6fb8;color:#fff;font:bold 12px/22px Arial;text-align:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}.pin.bad{background:#c0392b}
-.plb{position:absolute;left:30px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.92);color:#000;font:bold 11px Arial;padding:1px 6px;border-radius:4px;border:1px solid #888;white-space:nowrap;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.3)}.seg{transform:translate(-50%,-50%);background:rgba(255,255,255,.9);color:#000;font:bold 11px Arial;padding:1px 5px;border-radius:4px;border:1px solid #888;white-space:nowrap}
-html{overscroll-behavior-y:contain}
-header{position:sticky;top:0;z-index:10}
-header .sp2{flex:1}
-button{touch-action:manipulation;transition:opacity .12s}button:active{opacity:.65}button:disabled{opacity:.55;cursor:default}
-button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
-#hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1 1 100%}#hd #sy{margin-right:auto}
-#sy{font-size:12px;opacity:.95;white-space:nowrap;cursor:pointer}#sy.off{font-weight:bold}
-.spin{display:inline-block;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
-[hidden]{display:none!important}
-#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 14px;border-radius:10px;z-index:50;font-size:14px;max-width:92vw;display:flex;gap:10px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.3)}
-#toast button{background:transparent;color:inherit;border-color:currentColor;padding:4px 10px}
-#ptr{position:fixed;top:8px;left:50%;transform:translate(-50%,-150%);opacity:0;transition:transform .15s,opacity .15s;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:20px;padding:6px 14px;font-size:13px;z-index:40;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
-@media (prefers-reduced-motion:reduce){.spin{animation:none}#ptr{transition:none}}
-</style>
-<style>
-/* ===== Giao diện v3: gọn, dễ bấm bằng một tay ===== */
-body{font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-text-size-adjust:100%}
-header{flex-wrap:nowrap;padding:8px 12px;min-height:52px}
-header h1{flex:1 1 auto!important;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}
-#hd{flex:0 0 auto!important;flex-wrap:nowrap;gap:6px}#hd #sy{margin-right:0;font-size:12px}
-.un{font-size:13px;white-space:nowrap}@media (max-width:560px){.un{display:none}}
-main{padding:12px 12px 90px}
-button{min-height:44px;padding:8px 14px}header button{min-height:36px;padding:4px 10px}
-input,select{font-size:16px;padding:11px;min-height:44px}
-.card{border-radius:12px}
-.bar{display:flex;align-items:center;gap:8px;padding:8px 10px}.bar b{font-size:17px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tabs{display:flex;gap:6px;position:sticky;top:52px;z-index:9;background:var(--bg);padding:6px 0 8px}
-.tabs button{flex:1;border-radius:20px;font-weight:600;color:var(--mu)}.tabs button.on{background:var(--pr);color:var(--prt);border-color:var(--pr)}
-#qin{margin-bottom:8px}
-.it{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
-.it:active{background:var(--bg)}.it .mn{flex:1;min-width:0}.it .mn b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.it .mu{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sm{font-size:13px}
-.no{flex:0 0 36px;height:36px;border-radius:50%;background:var(--pr);color:var(--prt);display:grid;place-items:center;font-weight:700;font-size:14px}.no.bad{background:var(--dg)}
-.fab{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;border-radius:26px;padding:0 20px;min-height:52px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.35)}
-.chk{margin:0;display:flex;gap:6px;align-items:center;font-size:14px;color:var(--tx)}
-.menu{display:grid;gap:8px}.menu button{text-align:left}
-#lmap{height:calc(100dvh - 250px)!important;min-height:340px}
-dialog{max-height:92dvh;overflow:auto}
-@media (max-width:600px){dialog{margin:auto 0 0;width:100%;max-width:none;border-radius:16px 16px 0 0}}
-dialog>.row:last-child{position:sticky;bottom:-16px;background:var(--card);padding:10px 0 2px;margin-bottom:-2px}
-/* ===== Bản đồ v4 ===== */
-.plb{max-width:160px;overflow:hidden;text-overflow:ellipsis;font-size:12px!important}
-.plb.l{left:auto;right:30px}.hid{display:none!important}
-.pin.sm{font-size:10px}.pin.sel{background:#f5a100;color:#000;transform:scale(1.25)}
-.zs .pin{transform:scale(.8)}.zs .pin.sel{transform:scale(1.05)}
-.mc{display:flex;flex-direction:column;border-radius:10px;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,.45);margin-top:8px}
-.mc button{width:44px;height:44px;min-height:44px;padding:0;border:0;border-bottom:1px solid #ddd;border-radius:0;background:#fff;color:#222;font-size:18px;line-height:1}
-.mc button:last-child{border-bottom:0}.mc button.on{background:var(--pr);color:#fff}
-#ptinfo{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-top:8px}#ptinfo:empty{display:none}
-#mapwrap.fs{position:fixed;inset:0;z-index:2000;background:var(--bg)}
-#mapwrap.fs #lmap{height:100dvh!important;min-height:0!important;border:0!important;border-radius:0!important}
-#mapwrap.fs #mapnote{display:none}
-#mapwrap.fs .leaflet-top{top:env(safe-area-inset-top,0px)}
-#mapwrap.fs #ptinfo{position:absolute;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:1100;margin:0;box-shadow:0 4px 14px rgba(0,0,0,.35)}
-html.nsc,html.nsc body{overflow:hidden;overscroll-behavior:none}
-#toast{z-index:3000}.card:empty{display:none}
-.ico{flex:0 0 40px;width:40px;height:40px;min-height:40px;padding:0;border-radius:50%}
-#gmb{gap:8px}
-/* ===== Tin nhắn ===== */
-.chb{position:relative}
-.chb i,.nb{background:#e53935;color:#fff;border-radius:10px;min-width:18px;height:18px;font:700 11px/18px Arial;text-align:center;padding:0 5px;font-style:normal}
-.chb i{position:absolute;top:-7px;right:-7px}.nb{font-size:12px;line-height:20px;height:20px}
-#chat{position:fixed;inset:0;z-index:1500;background:var(--bg);display:flex;flex-direction:column}
-.ch{display:flex;align-items:center;gap:8px;background:var(--pr);color:var(--prt);padding:8px 10px calc(8px);padding-top:calc(8px + env(safe-area-inset-top,0px));min-height:52px}
-.ch b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}
-.ch button{background:transparent;color:var(--prt);border-color:var(--prt);min-height:36px;padding:4px 12px}
-#cmsgs{flex:1;overflow-y:auto;padding:10px;overscroll-behavior:contain}
-.bb{max-width:85%;width:fit-content;background:var(--card);border:1px solid var(--bd);border-radius:14px 14px 14px 4px;padding:8px 12px;margin:0 0 8px}
-.bb.me{margin-left:auto;background:var(--pr);color:var(--prt);border-color:var(--pr);border-radius:14px 14px 4px 14px}
-.bb.nt{border-left:4px solid #f5a100}
-.bb .by{font-size:12px;opacity:.75}.bb .tx{white-space:pre-wrap;word-break:break-word}
-.cc{display:flex;gap:8px;align-items:flex-end;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--bd);background:var(--card)}
-.cc textarea{flex:1;min-height:44px;max-height:120px;resize:none;font:inherit;font-size:16px;padding:10px;border:1px solid var(--bd);border-radius:12px;background:var(--bg);color:var(--tx)}
-.th{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
-.th .mn{flex:1;min-width:0}.th .mn .mu{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-</style>
-</head>
-<body>
-<header><h1 id="ttl">📍 Tọa độ khách hàng</h1><span id="hd"></span></header>
-<main id="app"></main>
-<dialog id="dlg"></dialog>
-<div id="chat" hidden></div>
-<div id="toast" hidden></div><div id="ptr" aria-hidden="true">↓ Kéo để làm mới</div>
+:root{--b:#0a63c9;--b2:#12b8c8;--bg:#eef5fc;--c:#fff;--t:#12263a;--m:#5d7388;--l:#dbe6f1;--w:#e8710a;--g:#14914b;--r:#d03a3a;--sh:0 2px 12px rgba(10,60,120,.09)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--t);padding-bottom:92px}
+header{background:linear-gradient(135deg,#0a63c9,#12b8c8);color:#fff;padding:14px 16px 22px;border-radius:0 0 26px 26px;position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 16px rgba(10,99,201,.25)}
+header h1{margin:0;font-size:18px;letter-spacing:.5px}header small{display:block;opacity:.85;font-size:12px;margin-top:2px}
+#lk{border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.18);color:#fff;border-radius:20px;padding:7px 12px;font-size:13px;font-weight:600}
+main{padding:0 12px;max-width:560px;margin:-10px auto 0;position:relative}
+.card{background:var(--c);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:var(--sh)}
+.card>h3,.ct{margin:0 0 6px;font-size:15px;display:flex;align-items:center;gap:6px}.ct i{font-style:normal;background:#e6f1fd;border-radius:8px;padding:3px 6px}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--m);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:11px 12px;font:inherit;border:1.5px solid var(--l);border-radius:12px;background:#f8fbff;color:var(--t);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--b);background:#fff}input:disabled{opacity:.7;background:#f1f5f9}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.iw{position:relative}.iw input{padding-right:38px}.iw em{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12px;color:var(--m)}
+.seg{display:flex;background:#e8f0f9;border-radius:14px;padding:4px;gap:4px}.seg button{flex:1;border:0;background:none;padding:10px 4px;border-radius:11px;font:inherit;font-size:13.5px;font-weight:700;color:var(--m)}.seg button.on{background:#fff;color:var(--b);box-shadow:0 1px 6px rgba(10,60,120,.15)}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-weight:600}
+.sw{position:relative;width:50px;height:28px;flex:none}.sw input{opacity:0;position:absolute;inset:0;width:100%;height:100%;margin:0;z-index:2}.sw i{position:absolute;inset:0;background:#c9d6e3;border-radius:20px;transition:.2s}.sw i:after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}.sw input:checked+i{background:var(--b2)}.sw input:checked+i:after{left:25px}
+.badge{padding:9px 12px;border-radius:12px;font-size:13.5px;margin-top:8px;background:#f1f5f9;color:var(--m)}.red{background:#fde8e8;color:#9b1c1c}.ok{background:#e2f5e9;color:#17653a}.warn{background:#fff3d6;color:#7a5200}
+.res{background:linear-gradient(135deg,#0a4fa8,#0a63c9 55%,#12b8c8);color:#fff;text-align:center;padding:20px 14px}
+.res small{opacity:.88;display:block}.res b{display:block;font-size:38px;margin:6px 0;letter-spacing:-.5px}
+details.card summary{font-weight:700;cursor:pointer;list-style:none;color:var(--b)}details.card summary::-webkit-details-marker{display:none}details.card summary:after{content:" ▾"}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}td,th{padding:6px 3px;border-bottom:1px solid var(--l);text-align:right}td:first-child,th:first-child{text-align:left}th{color:var(--m);font-weight:700}
+button.p{width:100%;padding:13px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--b),#1a7fe0);color:#fff;font:inherit;font-weight:700;margin-top:10px;box-shadow:0 3px 10px rgba(10,99,201,.3)}
+button.p.s{background:#fff;color:var(--t);border:1.5px solid var(--l);box-shadow:none}button.p.d{background:var(--r)}button:disabled{opacity:.55}
+.sec{font-size:12.5px;font-weight:700;color:var(--b);margin:14px 0 2px;text-transform:uppercase;letter-spacing:.4px}
+.ch input{border-color:var(--w);background:#fff6ec}.ed input{border-color:var(--b);background:#eaf3ff}
+nav{position:fixed;left:0;right:0;bottom:0;background:#fff;display:flex;box-shadow:0 -3px 16px rgba(10,60,120,.12);border-radius:20px 20px 0 0;padding:6px 8px 10px;z-index:6}
+nav button{flex:1;border:0;background:none;padding:6px 0;color:var(--m);font:inherit;font-size:12px;font-weight:700;position:relative}nav button span{display:block;font-size:22px}nav button.on{color:var(--b)}nav button.on span{transform:translateY(-2px)}
+nav b{position:absolute;top:0;left:calc(50% + 6px);background:var(--r);color:#fff;border-radius:10px;min-width:18px;height:18px;font-size:11px;line-height:18px;display:none}nav b.on{display:block}
+.nc{background:#fff;border-radius:16px;padding:13px 14px;margin-bottom:10px;box-shadow:var(--sh);border-left:5px solid var(--b2)}.nc.price{border-left-color:var(--w)}
+.nh{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.nh b{font-size:15px}.tags{display:flex;gap:4px;flex:none}.tg{font-style:normal;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:#e6f1fd;color:var(--b)}.tg.r{background:#fde8e8;color:var(--r)}
+.nc small,.sh-h small{color:var(--m)}.nb{margin:8px 0 0;white-space:pre-line}
+.chg{margin-top:8px;background:#fafcff;border:1px solid var(--l);border-radius:12px;padding:4px 10px}.cr{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed var(--l);font-size:13.5px}.cr:last-child{border:0}.cr s{color:var(--m)}.up{color:var(--r)}.dn{color:var(--g)}
+.ns{margin-top:8px;font-size:13px;font-weight:600}.okk{color:var(--g)}.ab{display:flex;gap:8px;margin-top:10px}.ab button{flex:1;padding:9px;border-radius:10px;border:1.5px solid var(--l);background:#fff;font:inherit;font-size:13px;font-weight:600}.ab .dl{color:var(--r)}
+.ov{position:fixed;inset:0;background:rgba(10,30,55,.55);display:none;align-items:flex-end;justify-content:center;z-index:20}.ov.on{display:flex}#ack{z-index:30;background:rgba(10,30,55,.72)}
+.sheet{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:24px 24px 0 0;padding:18px 16px 22px}.sheet h2{margin:0 0 6px;font-size:18px}
+#ack .sheet{padding:0;display:flex;flex-direction:column}.sh-h{background:linear-gradient(135deg,var(--w),#f5a524);color:#fff;padding:14px 16px;border-radius:24px 24px 0 0;display:flex;justify-content:space-between;font-weight:700}.sh-h.info{background:linear-gradient(135deg,var(--b),var(--b2))}.sh-h small{color:#fff;opacity:.9}
+.sh-b{padding:14px 16px;overflow:auto;flex:1}.sh-f{padding:4px 16px 20px;border-top:1px solid var(--l)}.hint{margin:8px 0 0;font-size:12px;color:var(--m);text-align:center}
+#toast{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);background:#12263a;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:40;display:none;max-width:90%;text-align:center}
+.al{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--l);font-size:14px}.al span:last-child{color:var(--m)}textarea{resize:vertical}
+</style></head><body>
+<header><div><h1>BẢNG CHIẾT TÍNH</h1><small id="hs">Dự toán lắp đặt đồng hồ · V6</small></div><button id="lk" onclick="lockBtn()">🔒 Quản trị</button></header>
+<main>
+<div id="p1">
+<div class="card"><div class="ct"><i>📍</i>Địa điểm</div>
+<label>Xã, phường</label><input id="xa" list="lx" placeholder="Gõ hoặc chọn…" autocomplete="off"><datalist id="lx"></datalist>
+<div id="vung" class="badge">Thuộc vùng: —</div>
+<label>Ấp / khu vực (xét đặc biệt khó khăn)</label><input id="ap" list="la" placeholder="Gõ hoặc chọn…" autocomplete="off"><datalist id="la"></datalist>
+<div id="dbkk" class="badge">—</div></div>
+<div class="card"><div class="ct"><i>📝</i>Thông tin khảo sát</div>
+<label>Trường hợp</label><input id="kind" type="hidden" value="Lắp mới ĐKT"><div class="seg" id="seg"><button class="on" data-v="Lắp mới ĐKT">Lắp mới ĐKT</button><button data-v="Lắp mới Tê">Lắp mới Tê</button><button data-v="Dời đai">Dời đai</button></div>
+<div class="row"><span>Hộ cận nghèo (giảm 50%)</span><label class="sw" style="margin:0"><input type="checkbox" id="ngheo"><i></i></label></div>
+<div class="g"><div><label>Cấp ĐKT</label><select id="dkt"></select></div><div><label>Cấp ống lắp đặt</label><select id="ong"><option>27</option><option>21</option></select></div></div>
+<div id="tew" hidden><label>Cấp Tê (ghi chú, không ảnh hưởng giá)</label><input id="te" inputmode="numeric"></div>
+<div class="sec">Ống &amp; phụ kiện</div>
+<div class="g"><div><label>Dài ống lắp đặt</label><div class="iw"><input id="len" type="number" inputmode="decimal" min="0" value="0"><em>m</em></div></div><div><label>Số lượng co</label><div class="iw"><input id="co" type="number" inputmode="numeric" min="0" value="0"><em>cái</em></div></div></div>
+<div class="sec">Đào – phá – hoàn trả</div>
+<div class="g"><div><label>Dài phá dỡ bê tông</label><div class="iw"><input id="pha" type="number" inputmode="decimal" min="0" value="0"><em>m</em></div></div><div><label>Dài hoàn trả bê tông</label><div class="iw"><input id="htr" type="number" inputmode="decimal" min="0" value="0"><em>m</em></div></div>
+<div><label>Dài đào ống cấp</label><div class="iw"><input id="dao" type="number" inputmode="decimal" min="0" value="0"><em>m</em></div></div><div><label>Sâu lắp đặt ĐKT</label><div class="iw"><input id="sau" type="number" inputmode="decimal" min="0" value="0"><em>m</em></div></div></div></div>
+<div class="card res"><small id="lbl">Chi phí phải thu</small><b id="thu">—</b><small id="sub"></small></div>
+<details class="card"><summary>Xem chi tiết dự toán</summary><div id="det"></div></details>
+</div>
+<div id="p2" hidden><div class="card"><div class="ct"><i>💲</i>Đơn giá vật tư</div><div id="st" class="badge"></div><div id="pr"></div><div id="adm"></div></div></div>
+<div id="p3" hidden><div class="card"><div class="ct"><i>👤</i>Người dùng</div><label>Họ tên / mã nhân viên (dùng khi xác nhận thông báo)</label><input id="uname" maxlength="80" placeholder="Nhập họ tên…"></div><div id="ncomp"></div><div id="nl"></div></div>
+</main>
+<nav><button id="t1" class="on" onclick="tab(1)"><span>🧮</span>Tính tiền</button><button id="t2" onclick="tab(2)"><span>💲</span>Giá vật tư</button><button id="t3" onclick="tab(3)"><span>🔔</span>Thông báo<b id="bd"></b></button></nav>
+<div class="ov" id="ov"><div class="sheet" id="md"></div></div><div class="ov" id="ack"></div><div id="toast"></div>
 <script>
-const $=s=>document.querySelector(s);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const uid=()=>Math.random().toString(36).slice(2,10);
-const mem={};
-const st={get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]??null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}},del(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}}};
-const ss={get(k){try{return sessionStorage.getItem(k)}catch(e){return mem['s'+k]??null}},set(k,v){try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){mem['s'+k]=v}}};
-let user=null,token=null,data={stations:[]},view={name:'stations'},q='',loaded=false,dataVer=0;
-const station=()=>data.stations.find(s=>s.id===view.id);
-
-/* ===== KẾT NỐI MÁY CHỦ GOOGLE APPS SCRIPT ===== */
-const API='https://script.google.com/macros/s/AKfycbxMSO67JZDoKG4-ZI2xfph1wC7ehj1IdAhRSlJpx4XiO6U68WAS4NUMgMhBl4aNqwu0/exec';
-/* Phiên đăng nhập lưu bền (localStorage) để đóng/mở app không phải đăng nhập lại */
-user=st.get('ctl:user')||ss.get('user');token=st.get('ctl:token')||ss.get('token');
-if(!user||!token){user=null;token=null}
-const persist=(u,t)=>{if(u){st.set('ctl:user',u);st.set('ctl:token',t);st.set('ctl:lastuser',u)}else{st.del('ctl:user');st.del('ctl:token');ss.set('user',null);ss.set('token',null)}};
-async function api(action,p={},ms=25000){
-  const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),ms);
-  try{
-    const r=await fetch(API,{method:'POST',body:JSON.stringify({action,token,...p}),signal:ac.signal});
-    const j=await r.json();
-    if(j.error==='AUTH'&&action!=='logout'&&user)forceLogout('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại. Dữ liệu chưa đồng bộ vẫn được giữ trên máy.');
-    return j;
-  }catch(e){return {ok:false,net:true,error:e.name==='AbortError'?'Máy chủ phản hồi quá lâu':'Không kết nối được máy chủ'}}
-  finally{clearTimeout(tm)}
-}
-const localKey=()=>'ctl:data:'+user,dirtyKey=()=>'ctl:dirty:'+user;
-const isDirty=()=>!!user&&st.get(dirtyKey())==='1';
-const setDirty=v=>{if(user){v?st.set(dirtyKey(),'1'):st.del(dirtyKey())}};
-let sstate='',syncing=false,lastSync=0,saveT,pushP=null;
-function setStatus(s){sstate=s;paintStatus()}
-function paintStatus(){
-  const e=$('#sy');if(!e)return;
-  const M={sync:'<span class="spin">⟳</span> Đang đồng bộ',ok:'✓ Đã đồng bộ',dirty:'● Chờ đồng bộ',off:'⚠ Mất kết nối'};
-  e.innerHTML=M[sstate]||'';e.className=sstate==='off'?'off':'';
-}
-/* Lưu: ghi ngay vào máy (tức thì), đẩy lên máy chủ sau 0,8 giây */
-const save=()=>{dataVer++;setDirty(true);st.set(localKey(),JSON.stringify(data));setStatus('dirty');clearTimeout(saveT);saveT=setTimeout(push,800)};
-function push(){return pushP=(pushP||Promise.resolve()).then(doPush)}
-async function doPush(){
-  if(!user||!isDirty())return true;
-  const v=dataVer;setStatus('sync');
-  const r=await api('save',{data});
-  if(r.ok){if(dataVer===v){setDirty(false);setStatus('ok')}else setStatus('dirty');return true}
-  if(r.error!=='AUTH'){
-    setStatus(r.net?'off':'dirty');
-    const m=$('#msg');if(m){m.className='err';m.textContent='Chưa lưu được lên máy chủ: '+r.error+' (đã lưu tạm trên máy, sẽ tự đồng bộ lại).'}
-  }
-  return false;
-}
-/* Đồng bộ nền: đẩy thay đổi chưa gửi, rồi tải bản mới. Không chặn giao diện. */
-async function sync(manual){
-  if(!user||!token||syncing)return;
-  pollMsgs();syncing=true;setStatus('sync');
-  try{
-    if(isDirty()){const ok=await push();if(!ok)return;setStatus('sync')}
-    const v=dataVer,r=await api('load');
-    if(!user)return;
-    if(!r.ok){
-      if(r.error!=='AUTH'){setStatus('off');if(manual)toast(r.error)}
-      if(!loaded)render();
-      return;
-    }
-    lastSync=Date.now();
-    if(v!==dataVer||isDirty()){setStatus(isDirty()?'dirty':'ok');return}
-    const nd=r.data&&r.data.stations?r.data:{stations:[]},js=JSON.stringify(nd),was=loaded;
-    if(js!==st.get(localKey())){
-      if($('#dlg').open){setStatus('ok');return}
-      loaded=true;data=nd;dataVer++;st.set(localKey(),js);refresh();
-    }else{loaded=true;if(!was)refresh()}
-    setStatus('ok');
-  }finally{syncing=false}
-}
-let reg=false;
-function toggleReg(e){
-  e.preventDefault();reg=!reg;
-  $('#lt').textContent=reg?'Tạo tài khoản':'Đăng nhập';
-  $('#lb').textContent=reg?'Tạo tài khoản':'Đăng nhập';
-  $('#rcw').hidden=!reg;
-  $('#tg').textContent=reg?'Đã có tài khoản? Đăng nhập':'Chưa có tài khoản? Tạo mới';
-}
-let warmed=0;
-function warm(){if(Date.now()-warmed<60000)return;warmed=Date.now();fetch(API,{method:'POST',body:JSON.stringify({action:'ping'})}).catch(()=>{})}
-async function doLogin(){
-  const u=$('#u').value.trim().toLowerCase(),p=$('#p').value,b=$('#lb'),m=$('#msg');
-  if(!u||p.length<6){m.className='err';m.textContent='Nhập tên đăng nhập và mật khẩu (tối thiểu 6 ký tự).';return}
-  b.disabled=true;m.className='mu';
-  const t0=Date.now(),tick=()=>{const n=Math.round((Date.now()-t0)/1000);m.textContent='Đang xử lý… '+n+' giây'+(n>=4?' (máy chủ Google đang khởi động, vui lòng chờ)':'')};tick();const iv=setInterval(tick,1000);
-  const r=await api(reg?'register':'login',{username:u,password:p,regCode:reg?$('#rc').value.trim():''},40000);
-  clearInterval(iv);b.disabled=false;
-  if(!r.ok){m.className='err';m.textContent=r.error;return}
-  user=r.username;token=r.token;persist(user,token);
-  /* Vào app ngay bằng dữ liệu đã lưu trên máy, tải bản mới ở nền */
-  let c=null;try{c=JSON.parse(st.get(localKey())||'null')}catch(e){}
-  loaded=!!(c&&c.stations);data=loaded?c:{stations:[]};dataVer++;view={name:'stations'};
-  /* Máy chủ trả luôn dữ liệu cùng lúc đăng nhập: dùng ngay, khỏi gọi thêm một lượt tải (trừ khi máy còn thay đổi chưa gửi) */
-  if(r.data&&r.data.stations&&!isDirty()){loaded=true;data=r.data;st.set(localKey(),JSON.stringify(data));lastSync=Date.now();render();setStatus('ok');prewarm();return}
-  render();sync();
-}
-async function logout(){
-  if(isDirty()){const ok=await push();if(!ok&&!confirm('Còn dữ liệu chưa đồng bộ lên máy chủ. Vẫn đăng xuất? (Dữ liệu vẫn được giữ trên máy và sẽ gửi lên khi bạn đăng nhập lại.)'))return}
-  api('logout');forceLogout();
-}
-function forceLogout(m){
-  chatReset();user=null;token=null;persist(null);data={stations:[]};loaded=false;dataVer++;sstate='';
-  const d=$('#dlg');if(d&&d.open)d.close();
-  view={name:'stations'};render();
-  if(m&&$('#msg')){$('#msg').className='err';$('#msg').textContent=m}
-}
-async function exportSheet(){
-  const m=$('#msg');m.className='mu';m.textContent='Đang xuất lên Google Sheet…';
-  await push();
-  const r=await api('export',{station:station()},60000);
-  if(!r.ok){m.className='err';m.textContent='Lỗi: '+r.error;return}
-  m.className='ok';
-  m.innerHTML=`Đã xuất ${r.customers} khách hàng, ${r.sections} đoạn. <a target="_blank" rel="noopener" href="${esc(r.url)}">Mở Google Sheet</a>`;
-}
-/* ===== HẾT PHẦN MÁY CHỦ ===== */
-
-function toast(m,act){
-  const t=$('#toast');t.innerHTML=esc(m)+(act?` <button onclick="${act.js}">${act.label}</button>`:'');t.hidden=false;
-  clearTimeout(toast.t);if(!act)toast.t=setTimeout(()=>{t.hidden=true},3500);
-}
-function render(){
-  renderHd();
-  if(!user)return renderLogin();
-  view.name==='station'&&station()?renderStation():renderStations();
-}
-function renderHd(){
-  $('#hd').innerHTML=user?`<span id="sy" onclick="sync(true)"></span><span class="un">👤 ${esc(user)}</span><button class="chb" onclick="openChat()" aria-label="Tin nhắn và thông báo">💬<i id="bdg" hidden></i></button><button onclick="sync(true)" title="Làm mới dữ liệu" aria-label="Làm mới dữ liệu">⟳</button><button onclick="logout()">Thoát</button>`:'';
-  paintStatus();paintBadge();
-}
-function refresh(fit){
-  if(view.name==='station'&&station()){
-    if(stView===view.id&&$('#rows'))updateStation(fit);else renderStation();
-  }else{
-    if(view.name==='station')view={name:'stations'};
-    render();
-  }
-}
-function renderLogin(){
-  destroyMap();stView=null;
-  $('#ttl').textContent='📍 Tọa độ khách hàng';
-  reg=false;
-  const enter=`onkeydown="if(event.key==='Enter')doLogin()"`;
-  $('#app').innerHTML=`<div class="card" style="max-width:380px;margin:30px auto"><h2 style="margin-top:0" id="lt">Đăng nhập</h2>
-  <label>Tên đăng nhập</label><input id="u" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" value="${esc(st.get('ctl:lastuser')||'')}" ${enter}><label>Mật khẩu</label><input id="p" type="password" autocomplete="current-password" enterkeyhint="go" ${enter}>
-  <div id="rcw" hidden><label>Mã đăng ký (do quản trị cấp)</label><input id="rc" ${enter}></div>
-  <div id="msg" class="err"></div><div class="row"><button class="p sp" onclick="doLogin()" id="lb">Đăng nhập</button></div>
-  <p class="mu"><a href="#" onclick="toggleReg(event)" id="tg">Chưa có tài khoản? Tạo mới</a></p>
-  <p class="mu">Đăng nhập một lần, lần sau mở app là vào thẳng. Dữ liệu lưu trên máy chủ Google theo từng tài khoản.</p></div>`;
-  if(!$('#u').value)$('#u').focus();else $('#p').focus();
-  warm();
+const L={dh:[187968,184932,183876],noi:[14240,14010,13930],van:[19936,19614,19502],co:[7974.4,7845.6,7800.8],ong:[7091.52,6976.98,6937.14],d1:[34176,33624,33432],d2:[48416,47634,47362],d3:[56960,56040,55720],d4:[65504,64446,64078],d5:[71200,70050,69650],d6:[93984,92466,91938],d7:[136704,134496,133728],pha:[291027,287977,284027],htr:[395545,387982,385461],dao:[167316,165053,160016],dap:[128352,126616,122752]};
+const DAIL={32:'d1',40:'d1',49:'d1',60:'d1',75:'d1',90:'d2',110:'d3',114:'d3',140:'d4',160:'d5',168:'d5',200:'d6',220:'d6',225:'d6',250:'d7'};
+const DEF={rt27:3900,rn27:3500,van:120000,co27:4300,ong27:11200,val27:24272,rt21:2700,rn21:1900,co21:2700,ong21:8800,val21:18600,keo:11200,cs:3927,htr:1407711,
+dai:{32:55000,40:100000,49:114400,60:126200,75:126200,90:177400,110:165000,114:192200,140:264000,160:279000,168:308100,200:517000,220:418200,225:520000,250:595000}};
+const r3=x=>Math.round(x/1000)*1000;
+function calc(i,P){
+const v={II:0,III:1,IV:2}[i.vung],lb=k=>L[k][v],te=i.kind==='Lắp mới Tê',doi=i.kind==='Dời đai',s=i.ong,R=[];
+const add=(n,sl,dg,lk,ls)=>R.push({n,sl,dg,a:sl*dg,b:lk?(ls===undefined?sl:ls)*lb(lk):0});
+add('Đồng hồ D15',1,0,'dh',doi?0:1);
+add('Nối RT',2,P['rt'+s],'noi');
+add('Nối RN',1,te?0:P['rn'+s],'noi',te?0:1);
+add('Van góc DN15',1,P.van,'van');
+add('Co PVC '+s,i.co,P['co'+s],'co');
+add('Ống PVC D'+s+' (m)',i.len,P['ong'+s],'ong');
+add('Keo dán',1,P.keo);
+add('Cao su non',1,P.cs);
+add('Đai khởi thủy '+i.dkt+'/27',1,te?0:P.dai[i.dkt],DAIL[i.dkt],te?0:1);
+add('Phá dỡ bê tông (m³)',0.03*i.pha,0,'pha');
+add('Hoàn trả bê tông (m³)',0.03*i.htr,P.htr,'htr');
+add('Đào ống (m³)',0.09*i.dao,0,'dao');
+add('Đắp ống (m³)',0.09*i.dao,0,'dap');
+add('Đào đai (m³)',0.15*i.sau,0,'dao');
+add('Đắp đai (m³)',0.15*i.sau,0,'dap');
+add('Val PVC '+s,1,P['val'+s],'co');
+const A=R.reduce((t,r)=>t+r.a,0),B=R.reduce((t,r)=>t+r.b,0),T=A+B,C1=T*5.5/100,C2=T*2/100,GT=C1+C2,TL=(T+GT)*5.5/100,GXD=T+GT+TL,GKS=GXD*5.8/100,VAT=(GXD+GKS)*0.08,G=GXD+GKS+VAT;
+return{R,A,B,T,GT,TL,GXD,GKS,VAT,G,G3:r3(G),thu:r3(i.ngheo?Math.round(G/2):G)};
 }
 
-function renderStations(){
-  destroyMap();stView=null;
-  $('#ttl').textContent='📍 Các trạm tổng kiểm tra';
-  const l=data.stations.map(s=>`<div class="item" style="cursor:pointer" onclick="openStation('${s.id}')"><div><b>${esc(s.name||s.code)}</b> · ${esc(s.code)}<div class="mu">NV quản lý: ${esc(s.manager)} · ${esc(s.place)} · ${s.customers.length} khách hàng</div></div>
-  <div class="row"><button onclick="event.stopPropagation();stationForm('${s.id}')">Sửa</button></div></div>`).join('');
-  const empty=!loaded
-    ?(sstate==='off'?'<p class="err">Chưa tải được dữ liệu. Kiểm tra mạng rồi bấm ⟳ ở góc trên hoặc kéo màn hình xuống.</p>':'<p class="mu"><span class="spin">⟳</span> Đang tải dữ liệu từ máy chủ…</p>')
-    :'<p class="mu">Chưa có trạm nào. Bấm “Thêm trạm” để bắt đầu.</p>';
-  $('#app').innerHTML=`<div class="card"><div class="row"><h2 style="margin:0" class="sp">Danh sách trạm</h2><button class="p" onclick="stationForm()" ${loaded?'':'disabled'}>+ Thêm trạm</button></div>
-  ${l||empty}</div><div id="msg"></div>`;
-}
-function openStation(id){view={name:'station',id};q='';render()}
-function stationForm(id){
-  const s=data.stations.find(x=>x.id===id)||{name:'',code:'',manager:'',place:''};
-  dlg(`<h3 style="margin-top:0">${id?'Sửa':'Thêm'} trạm tổng kiểm tra</h3>
-  <label>Tên trạm</label><input id="f_name" value="${esc(s.name)}"><label>Mã trạm</label><input id="f_code" value="${esc(s.code)}" placeholder="XVH102">
-  <label>Nhân viên quản lý</label><input id="f_manager" value="${esc(s.manager)}"><label>Địa điểm</label><input id="f_place" value="${esc(s.place)}" placeholder="Ấp ..., Xã ..., Tỉnh/TP ...">
-  <div class="row" style="margin-top:14px">${id?`<button class="d" onclick="delStation('${id}')">Xóa trạm</button>`:''}<span class="sp"></span><button onclick="$('#dlg').close()">Hủy</button><button class="p" onclick="saveStation('${id||''}')">Lưu</button></div>`);
-}
-function saveStation(id){
-  const v=k=>$('#f_'+k).value.trim();
-  if(!v('code')){alert('Vui lòng nhập mã trạm');return}
-  let s=data.stations.find(x=>x.id===id);
-  if(!s){s={id:uid(),customers:[]};data.stations.push(s)}
-  Object.assign(s,{name:v('name'),code:v('code').toUpperCase(),manager:v('manager'),place:v('place')});
-  save();$('#dlg').close();render();
-}
-function delStation(id){const s=data.stations.find(x=>x.id===id);if(confirm(`Xóa trạm ${s.code} và toàn bộ ${s.customers.length} khách hàng?`)){$('#dlg').close();data.stations=data.stations.filter(x=>x.id!==id);save();render()}}
+const RG=[["Phường An Bình", "An Bình", "II"], ["Phường Cái Răng", "Cái Răng", "II"], ["Phường Hưng Phú", "Hưng Phú", "II"], ["Phường Long Tuyền", "Long Tuyền", "II"], ["Phường Ô Môn", "Ô Môn", "II"], ["Phường Tân Lộc", "Tân Lộc", "II"], ["Phường Thốt Nốt", "Thốt Nốt", "II"], ["Phường Thới An Đông", "Thới An Đông", "II"], ["Phường Thới Long", "Thới Long", "II"], ["Phường Thuận Hưng", "Thuận Hưng", "II"], ["Phường Trung Nhứt", "Trung Nhứt", "II"], ["Phường Phước Thới", "Phước Thới", "II"], ["Phường Sóc Trăng", "Sóc Trăng", "II"], ["Phường Phú Lợi", "Phú Lợi", "II"], ["Phường Mỹ Xuyên", "Mỹ Xuyên", "II"], ["Xã Cờ Đỏ", "Cờ Đỏ", "III"], ["Xã Trường Thành", "Trường Thành", "III"], ["Xã Đông Hiệp", "Đông Hiệp", "III"], ["Xã Đông Thuận", "Đông Thuận", "III"], ["Xã Nhơn Ái", "Nhơn Ái", "III"], ["Xã Phong Điền", "Phong Điền", "III"], ["Xã Thạnh An", "Thạnh An", "III"], ["Xã Thạnh Phú", "Thạnh Phú", "III"], ["Xã Thới Hưng", "Thới Hưng", "III"], ["Xã Thới Lai", "Thới Lai", "III"], ["Xã Trung Hưng", "Trung Hưng", "III"], ["Xã Trường Long", "Trường Long", "III"], ["Xã Trường Xuân", "Trường Xuân", "III"], ["Xã Vĩnh Thạnh", "Vĩnh Thạnh", "III"], ["Xã Vĩnh Trinh", "Vĩnh Trinh", "III"], ["Xã Thạnh Quới", "Thạnh Quới", "III"], ["Phường Ngã Năm", "Ngã Năm", "III"], ["Phường Mỹ Quới", "Mỹ Quới", "III"], ["Phường Vĩnh Châu", "Vĩnh Châu", "III"], ["Phường Khánh Hòa", "Khánh Hòa", "III"], ["Phường Vĩnh Phước", "Vĩnh Phước", "III"], ["Xã Tân Long", "Tân Long", "III"], ["Xã Lai Hòa", "Lai Hòa", "III"], ["Xã Vĩnh Hải", "Vĩnh Hải", "III"], ["Xã Cù Lao Dung", "Cù Lao Dung", "IV"], ["Xã An Thạnh", "An Thạnh", "IV"], ["Xã Hồ Đắc Kiện", "Hồ Đắc Kiện", "IV"], ["Xã Thuận Hòa", "Thuận Hòa", "IV"], ["Xã Phú Tâm", "Phú Tâm", "IV"], ["Xã An Ninh", "An Ninh", "IV"], ["Xã An Lạc Thôn", "An Lạc Thôn", "IV"], ["Xã Nhơn Mỹ", "Nhơn Mỹ", "IV"], ["Xã Kế Sách", "Kế Sách", "IV"], ["Xã Thới An Hội", "Thới An Hội", "IV"], ["Xã Đại Hải", "Đại Hải", "IV"], ["Xã Trường Khánh", "Trường Khánh", "IV"], ["Xã Tân Thạnh", "Tân Thạnh", "IV"], ["Xã Long Phú", "Long Phú", "IV"], ["Xã Mỹ Hương", "Mỹ Hương", "IV"], ["Xã Long Hưng", "Long Hưng", "IV"], ["Xã Mỹ Tú", "Mỹ Tú", "IV"], ["Xã Mỹ Phước", "Mỹ Phước", "IV"], ["Xã Gia Hòa", "Gia Hòa", "IV"], ["Xã Nhu Gia", "Nhu Gia", "IV"], ["Xã Ngọc Tố", "Ngọc Tố", "IV"], ["Xã Hòa Tú", "Hòa Tú", "IV"], ["Xã Thạnh Thới An", "Thạnh Thới An", "IV"], ["Xã Trần Đề", "Trần Đề", "IV"], ["Xã Tài Văn", "Tài Văn", "IV"], ["Xã Lịch Hội Thượng", "Lịch Hội Thượng", "IV"], ["Xã Liêu Tú", "Liêu Tú", "IV"], ["Xã Vĩnh Lợi", "Vĩnh Lợi", "IV"], ["Xã Lâm Tân", "Lâm Tân", "IV"], ["Xã Phú Lộc", "Phú Lộc", "IV"], ["Xã Đại Ngãi", "Đại Ngãi", "IV"]],AP={"Phường Cái Răng":[["Khu vực Lê Bình",0]],"Phường Khánh Hòa":[["Khu vực Cảng Buối",0],["Khu vực Đặng Văn Đông",1],["Khu vực No Tom",1],["Khu vực Tân Lập",1],["Khu vực Trà Teo",1],["Khu vực Bưng Tum",1],["Khu vực Nguyễn Út",1],["Khu vực Trà Niên",1]],"Phường Mỹ Xuyên":[["Khu vực 1",0],["Khu vực 2",0],["Khu Vực Tâm Trung",0],["Khu vực Châu Thành",0],["Khu vực Tâm Phước",0],["Khu vực Tâm Lộc",0],["Khu vực Tâm Thọ",0],["Khu vực Đại Thành",0],["Khu vực Đại Ân",0],["Khu vực Đại Nghĩa Thắng",0]],"Phường Ngã Bảy":[["Khu vực 1",0]],"Phường Ngã Năm":[["Khu vực 1",0],["Khu vực Vĩnh Thành",0],["Khu vực Vĩnh Thuận",0],["Khu vực Vĩnh Trung",0],["Khu vực Vĩnh Quới",0],["Khu vực Vĩnh Thanh",0]],"Phường Ninh Kiều":[["Khu vực 1",0],["Khu vực 3",0],["Khu vực 10",0]],"Phường Ô Môn":[["Khu vực Châu Thành",0],["Khu vực Chợ Mới",0],["Khu vực Đồng Hòa",0],["Khu vực Đồng Tiến",0]],"Phường Phú Lợi":[["Khu vực Chợ Trung tâm",0],["Khu vực Cầu Bon",0],["Khu vực Quản Khuôn",0],["Khu vực Tiểu đoàn Tây đô",0],["Khu vực Thuận Hóa",0],["Khu vực Chùa Dơi",0],["Khu vực Mỹ Phương",0],["Khu vực Sung Đinh",0],["Khu vực Phú Lợi",0],["Khu vực Khánh Hưng",0],["Khu vực Đô thị 5A",0]],"Phường Sóc Trăng":[["Khu vực 2",0],["Khu vực 3",0],["Khu vực 4",0],["Khu vực 5",0],["Khu vực 6",0],["Khu vực 7",0],["Khu vực 8",0],["Khu vực 9",0],["Khu vực 10",0],["Khu vực 11",0],["Khu vực 12",0],["Khu vực 13",0],["Khu vực 15",0],["Khu vực 16",0]],"Phường Vị Tân":[["Khu vực 3",0],["Khu vực 10",0]],"Phường Vị Thanh":[["Khu vực 7",0]],"Phường Vĩnh Châu":[["Khu vực 1",0],["Khu vực 2",0],["Khu vực Cà Săng",1],["Khu vực Cà Lăng A Biển",1],["Khu vực Vĩnh Bình",1],["Khu vực Đại Bái",1],["Khu vực Đại Bái A",1],["Khu vực 3",0],["Khu vực 4",0],["Khu vực Soài Côn",0],["Khu vực Vĩnh An",1],["Khu vực Sân Chim",1],["Khu vực Đai Rụng",1],["Khu vực Ca Lạc",1],["Khu vực Vĩnh Biên",1],["Khu vực Lền Buối",1]],"Phường Vĩnh Phước":[["Khu vực Wáth Pích",0],["Khu vực Vĩnh Thành",0],["Khu vực Sở Tại A",1],["Khu vực Xẻo Me",1],["Khu vực Tân Qui",1],["Khu vực Biển Trên",1],["Khu vực Biển Dưới",1],["Khu vực Trà Vôn",1],["Khu vực Tham Chu",1],["Khu vực Tân Nam",1],["Khu vực Nô Puôl",1],["Khu vực Điền Giữa",1]],"Xã Vĩnh Tường":[["Ấp 5",1]],"Xã An Ninh":[["Ấp An Tập",0],["Ấp Xà Lan",1],["Ấp Chông Nô",1],["Ấp Phụng Hiệp",1],["Ấp An Trạch",0],["Ấp Bưng Tróp A",1],["Ấp Bưng Tróp B",0],["Ấp Châu Thành",1],["Ấp Giồng Chùa A",0],["Ấp Kinh Mới",1]],"Xã Cờ Đỏ":[["Ấp Thới Hòa B",0],["Ấp Thới Phước",0],["Ấp Thới Trường",0],["Ấp Thới Xuân",0]],"Xã Cù Lao Dung":[["Ấp Sơn Ton",0],["Ấp Vàm Hồ A",0],["Ấp Võ Thành Văn",0],["Ấp An Nghiệp A",0],["Ấp An Bình",0]],"Xã Đông Hiệp":[["Ấp Đông Thắng",0]],"Xã Đông Phước":[["Ấp Tân An",0],["Ấp Tân Phú",0]],"Xã Gia Hòa":[["Ấp Phú Giao",0],["Ấp Hòa Khanh",0],["Ấp Đào viên",0],["Ấp Ngọn",0],["Ấp Đay Sô",0]],"Xã Hỏa Lựu":[["Ấp Thạnh Thắng",0],["Ấp Thạnh Phú",0],["Ấp Thạnh Trung",0]],"Xã Hồ Đắc Kiện":[["Ấp Xây Đá A",0],["Ấp Xây Đá B",0],["Ấp Thiện Mỹ",0]],"Xã Kế Sách":[["Ấp An Ninh 1",0],["Ấp An Ninh 2",1],["Ấp An Thành",1],["Ấp An Khương",1],["Ấp An Phú",1],["Ấp An Định",1],["Ấp Bồ Đề",1],["Ấp Cây Sộp",1],["Ấp Thành Tân",1],["Ấp Ba Lăng",1]],"Xã Lai Hòa":[["Ấp Lai Hòa",1],["Ấp Lai Hòa A",1],["Ấp Prey Chóp",1],["Ấp Prey Chóp A",1],["Ấp Prey Chóp B",1],["Ấp Xẻo Cóc",1],["Ấp Xung Thum A",1],["Ấp Xung Thum B",1]],"Xã Lâm Tân":[["Ấp Kiết Thắng",1],["Ấp Kiết Lợi",1],["Ấp Kiết Lập A",1],["Ấp Trung Thống",1],["Ấp Trung Hòa",1],["Ấp Trung Bình",1],["Ấp Trung Thành",1]],"Xã Lịch Hội Thượng":[["Ấp Giồng Giữa",0],["Ấp Châu Thành",0],["Ấp Hội Trung",1],["Ấp Phố Dưới",1],["Ấp Sóc Lèo",1],["Ấp Nam Chánh",0]],"Xã Liêu Tú":[["Ấp Bưng Buối",1],["Ấp Bưng Triết",1],["Ấp Đại Nôn",1],["Ấp Đào Viên",1],["Ấp Lao Vên",1],["Ấp Tổng Cáng",1],["Ấp Trà Ông",1],["Ấp Giồng Chát",0]],"Xã Long Phú":[["Ấp 4",1],["Ấp Khoan Tang",1],["Ấp Tân Lập",1],["Ấp Nước Mặn 1",1],["Ấp Nước Mặn 2",1],["Ấp Kinh Ngang",1],["Ấp Bưng Long",1],["Ấp Sóc Mới",1],["Ấp Bưng Thum",1],["Ấp Phú Đức",1]],"Xã Lương Tâm":[["Ấp 5",1],["Ấp 6",1],["Ấp 7",1],["Ấp 8",1],["Ấp 9",1]],"Xã Mỹ Hương":[["Ấp Bưng Cóc",1],["Ấp Đai Úi",1],["Ấp Bắc Dần",1],["Ấp Sóc Xoài",1],["Ấp Tá Biên",1],["Ấp Bét Tôn",1],["Ấp Trà Lây 1",0],["Ấp Trà Lây 2",1],["Ấp Bố Liên 3",1],["Ấp Tà Ân A1",1],["Ấp Tà Ân A2",1]],"Xã Mỹ Tú":[["Ấp Tam Sóc A",0],["Ấp Tam Sóc B",0],["Ấp Tam Sóc C",0],["Ấp Tam Sóc D",0]],"Xã Ngọc Tố":[["Ấp Dù Tho",0],["Ấp Tham Đôn",0],["Ấp Bưng Chụm",0],["Ấp Cần Giờ",0],["Ấp Sô La",0],["Ấp Sông Cái",0]],"Xã Nhơn Mỹ":[["Ấp An Nghiệp",0]],"Xã Nhu Gia":[["Ấp Khu 1",0],["Ấp Khu 2",0],["Ấp Khu 3",0],["Ấp Khu 4",0],["Ấp Cần Đước",0],["Ấp Rạch Sên",0],["Ấp Sóc Bưng",0]],"Xã Phú Lộc":[["Ấp Giồng Chùa",0],["Ấp Nàng Rền",0],["Ấp Chợ Cũ",0],["Ấp Rẩy Mới 1",1],["Ấp Tà Điếp C1",1],["Ấp 1",0],["Ấp Xa Mau 2",0],["Ấp Phú Tân",0],["Ấp Kinh Ngay 1",0],["Ấp Xóm Tro 1",1],["Ấp Số 8",1],["Ấp Số 9",1],["Ấp Bào Cát",0],["Ấp Trương Hiền",0]],"Xã Phú Tâm":[["Ấp Trà Quýt A",0],["Ấp Trà Quýt",0],["Ấp Xây Cáp",1],["Ấp Phú Thành",1],["Ấp Thọ Hòa Đông",0],["Ấp Phú Hữu",1],["Ấp Phú Bình",1],["Ấp Giồng Cát",0]],"Xã Tài Văn":[["Ấp Chắc Tưng",1],["Ấp Hà Bô",1],["Ấp Tài Công",1],["Ấp Prệc Đôn",1],["Ấp Bưng Chông",1],["Ấp Bưng Cà Pốt",1],["Ấp Trà Đức",1],["Ấp Bưng Sa",1],["Ấp Bờ Đập",1],["Ấp Tiếp Nhựt",1]],"Xã Tân Hòa":[["Ấp Bảy Ngàn",0]],"Xã Tân Long":[["Ấp Tân Thắng",1],["Ấp A2",1],["Ấp B1",0]],"Xã Tân Thạnh":[["Ấp Ko Kô",0],["Ấp Tân Lịch",0],["Ấp Tân Qui A",0],["Ấp Tân Qui B",0]],"Xã Thạnh Thới An":[["Ấp Hưng Thới",1],["Ấp Tắc Bướm",1],["Ấp An Hòa 1",1],["Ấp An Hòa 2",1]],"Xã Thới An Hội":[["Ấp Tập Rèn",1],["Ấp An Nhơn",1]],"Xã Thới Lai":[["Ấp Thới Thuận B",0]],"Xã Thuận Hòa":[["Ấp Trà Quýt B",1],["Ấp Trà Canh A1",1],["Ấp Trà Canh A2",1],["Ấp Trà Canh B",1],["Ấp Sa Bâu",1],["Ấp Phước Lợi",1],["Ấp Phước An",1],["Ấp Phước Hòa",1],["Ấp Phước Thuận",1],["Ấp Phước Quới",1],["Ấp Phước Phong",1]],"Xã Trần Đề":[["Ấp Bãi Giá",1],["Ấp Bưng Lức",1],["Ấp Lâm Dồ",1],["Ấp Đầu Giồng",0],["Ấp Giồng Chùa",0],["Ấp Nhà Thờ",0],["Ấp Tú Điềm",0],["Ấp Chợ",0],["Ấp Ngan Rô 2",0]],"Xã Trường Khánh":[["Ấp Trường Thành",0],["Ấp Trường Hưng",0],["Ấp Trường Lộc",0],["Ấp Trường Bình",0],["Ấp Trường An",0]],"Xã Trường Thành":[["Ấp Định Hòa",0]],"Xã Vị Thủy":[["Ấp 2",0]],"Xã Vĩnh Hải":[["Ấp Âu Thọ A",0],["Ấp Âu Thọ B",0],["Ấp Trà Sết",1],["Ấp Giồng Nổi",0],["Ấp Huỳnh Kỳ",1],["Ấp Vĩnh Thạnh A",0],["Ấp Vĩnh Thạnh B",1]],"Xã Vĩnh Lợi":[["Ấp Vĩnh Thắng",1],["Ấp Xóm Tro 2",1],["Ấp Kinh Ngay 2",1]],"Xã Vĩnh Thuận Đông":[["Ấp 10",0],["Ấp 2",0]],"Xã Vĩnh Trinh":[["Ấp Vĩnh Nhuận",0]],"Xã Vĩnh Viễn":[["Ấp 10",0],["Ấp 12",0]],"Xã Xà Phiên":[["Ấp Ngã Bác",0],["Ấp Ngã Cạy",0]]};
+const API_URL="https://script.google.com/macros/s/AKfycbzXz5bUWpx-NKO6wYcV49w60IB_N1jnauQMCzx2s5bvR890FRLx3z19XuQ5jZyL2yU/exec",VER="6.0";
+const $=id=>document.getElementById(id),f=n=>Math.round(n).toLocaleString('vi-VN');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let P=clone(DEF),D=null,PW=null,SRV={ts:null,src:'giá gốc'},N=ls.get('notices',[]),ACK=ls.get('acked',null),SEEN=ls.get('seen',null),Q=ls.get('ackq',[]);
+let USER=ls.get('user',null);if(!USER||!USER.dev){USER={name:'',dev:'d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36)};ls.set('user',USER)}
+function applyPrices(o){o=o||{};P=Object.assign(clone(DEF),o);P.dai=Object.assign({},DEF.dai,o.dai||{})}
+const c0=ls.get('giaSrv',null);if(c0&&c0.p){applyPrices(c0.p);SRV={ts:c0.ts,src:'bản lưu trên máy'}}
+const cache=(p,ts)=>ls.set('giaSrv',{p:p,ts:ts});
+const post=async b=>(await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(b)})).json();
+let tm;function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(tm);tm=setTimeout(()=>t.style.display='none',3200)}
+function openMd(h){$('md').innerHTML=h;$('ov').classList.add('on')}function closeMd(){$('ov').classList.remove('on')}
+$('ov').onclick=e=>{if(e.target==$('ov'))closeMd()};
+function ask(msg,yes,lab){openMd(`<h2>Xác nhận</h2><p>${esc(msg)}</p><button class="p d" id="yy">${lab||'Đồng ý'}</button><button class="p s" onclick="closeMd()">Hủy</button>`);$('yy').onclick=()=>{closeMd();yes()}}
 
-/* Trang trạm: dựng khung một lần, sau đó chỉ cập nhật phần thay đổi (không vẽ lại cả trang, không dựng lại bản đồ) */
-let stView=null,shown=100,qT;
-let tab='pts';
-function renderStation(){
-  const s=station();$('#ttl').textContent='Trạm '+s.code;
-  destroyMap();stView=s.id;shown=100;tab='pts';
-  $('#app').innerHTML=`<div class="card bar"><button onclick="view={name:'stations'};render()" aria-label="Về danh sách trạm">←</button><b class="sp" id="sthd"></b><button onclick="exportMenu()">⋯ Nhập / Xuất</button><input type="file" id="impf" accept=".xlsx,.csv" hidden onchange="importFile(this)"></div>
-  <div class="mu" id="sthead"></div><div id="msg"></div>
-  <nav class="tabs"><button data-t="pts" onclick="setTab('pts')"></button><button data-t="map" onclick="setTab('map')">Bản đồ</button><button data-t="sec" onclick="setTab('sec')">Đoạn nút</button></nav>
-  <div class="pane" id="p_pts"><input id="qin" type="search" placeholder="Tìm theo tên, mã KH, SĐT…" value="${esc(q)}" oninput="onSearch(this.value)" enterkeyhint="search" autocomplete="off"><div id="rows"></div><div id="more"></div><button class="p fab" onclick="custForm()">＋ Thêm điểm</button></div>
-  <div class="pane" id="p_map" hidden><div id="mapwrap"><div id="mapbox"></div><div id="ptinfo"></div></div>
-  <div id="gmb" class="row" style="margin-top:10px"></div><div id="segbox" class="card" style="margin-top:10px"></div></div>
-  <div class="pane" id="p_sec" hidden><div id="secbox"></div></div>`;
-  setTab('pts',1);updateStation(true);
-}
-function setTab(t,quiet){
-  tab=t;document.querySelectorAll('.pane').forEach(p=>p.hidden=p.id!=='p_'+t);
-  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
-  if(!quiet)scrollTo(0,0);
-  if(t==='map')updateMap(false).then(()=>{if(lmap)lmap.invalidateSize()});
-}
-function exportMenu(){
-  dlg(`<h3 style="margin-top:0">Nhập / Xuất dữ liệu</h3><div class="menu">
-  <button onclick="$('#dlg').close();$('#impf').click()">⬆ Nhập từ Excel / CSV</button>
-  <button onclick="$('#dlg').close();exportXlsx()">⬇ Xuất Excel (mẫu A3)</button>
-  <button onclick="$('#dlg').close();exportSheet()">☁ Xuất Google Sheet</button>
-  <button onclick="$('#dlg').close();exportCsv()">🗺 CSV cho Google My Maps</button></div>
-  <div class="row" style="margin-top:12px"><span class="sp"></span><button onclick="$('#dlg').close()">Đóng</button></div>`);
-}
-function updateStation(fit){
-  const s=station();if(!s)return;
-  $('#sthd').textContent=s.name||s.code;
-  $('#sthead').textContent=`${s.code} · NV quản lý: ${s.manager||'—'} · ${s.place||'—'}`;
-  document.querySelector('.tabs [data-t=pts]').textContent=`Điểm (${s.customers.length})`;
-  renderRows();
-  $('#gmb').innerHTML=gmButtons(s);
-  $('#segbox').innerHTML=segTable(s);
-  $('#secbox').innerHTML=secCard(s);
-  if(tab==='map')updateMap(fit);
-}
-function onSearch(v){clearTimeout(qT);qT=setTimeout(()=>{q=v;shown=100;renderRows()},150)}
-function renderRows(){
-  const s=station(),k=q.toLowerCase(),idx=new Map(s.customers.map((c,i)=>[c,i+1]));
-  const f=k?s.customers.filter(c=>((c.name||'')+' '+(c.code||'')+' '+(c.phone||'')).toLowerCase().includes(k)):s.customers;
-  $('#rows').innerHTML=f.slice(0,shown).map(c=>{
-    const t=issuesOf(s,c),bad=t.length>0;
-    return `<div class="it" onclick="custForm('${c.id}')"><span class="no${bad?' bad':''}">${idx.get(c)}</span><div class="mn"><b>${esc(c.name)}</b><div class="mu">${[c.code,c.phone,c.pipe&&('Ống '+c.pipe)].filter(Boolean).map(esc).join(' · ')||'Chưa có mã KH / SĐT'}</div>
-    <div class="mu">${c.lat!=null?c.lat+', '+c.lng:'Chưa có tọa độ'}</div>${bad?`<div class="err sm">⚠ ${esc(t[0])}</div>`:''}</div><span class="${bad?'err':'ok'}">${bad?'⚠':'✓'}</span>${c.lat!=null?`<button class="ico" aria-label="Xem trên bản đồ" onclick="event.stopPropagation();gotoPt('${c.id}')">📍</button>`:''}</div>`}).join('')||'<div class="card mu">Chưa có khách hàng. Bấm “＋ Thêm điểm” hoặc nhập từ Excel.</div>';
-  $('#more').innerHTML=f.length>shown
-    ?`<div class="row" style="margin:8px 0 70px"><span class="mu sp">Hiển thị ${shown}/${f.length}</span><button onclick="shown+=200;renderRows()">Hiện thêm</button><button onclick="shown=1e9;renderRows()">Hiện tất cả</button></div>`
-    :`<div class="mu" style="margin:8px 0 70px">${k?f.length+'/'+s.customers.length+' kết quả':''}</div>`;
-}
-function parseChanges(t){const pts=[],types=[];String(t||'').split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{const m=l.match(/^(\d+)\s*[:\-,;\s]\s*(.+)$/);if(m){pts.push(m[1]);types.push(m[2])}else{pts.push(l);types.push('')}});return {pts,types}}
-function secCard(s){
-  s.sections=s.sections||[];
-  const tot=s.sections.reduce((a,x)=>[a[0]+(Number(x.len)||0),a[1]+(Number(x.cust)||0)],[0,0]);
-  const rows=s.sections.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.chain)}</td><td>${esc(x.pipe)}</td><td>${esc(x.len)}</td><td>${esc(x.cust)}</td><td style="white-space:pre">${esc(parseChanges(x.changes).pts.join('\n'))}</td><td style="white-space:pre">${esc(parseChanges(x.changes).types.join('\n'))}</td><td>${esc(x.note)}</td>
-  <td><button onclick="secForm('${x.id}')">Sửa</button> <button class="d" onclick="delSec('${x.id}')">Xóa</button></td></tr>`).join('');
-  return `<div class="card"><div class="row"><div class="sp"><h3 style="margin:0">Đoạn điểm nút (sheet “ĐO CHIỀU DÀI”)</h3><div class="mu">Dữ liệu này được xuất thành sheet 2 của file Excel. “Tính tự động” tính chiều dài (và cấp ống nếu còn trống) cho tất cả các đoạn từ tọa độ.</div></div><button onclick="calcAll()">⚙ Tính tự động</button><button class="p" onclick="secForm()">+ Thêm đoạn</button></div><div id="sm2" class="mu" style="margin-top:6px"></div>
-  <div class="tw" style="margin-top:10px"><table><tr><th>Stt</th><th>Đoạn điểm nút</th><th>Cấp ống (mm)</th><th>Chiều dài (m)</th><th>SL khách hàng</th><th>Vị trí điểm thay đổi cấp ống</th><th>Loại thay đổi cấp ống</th><th>Ghi chú</th><th></th></tr>
-  ${rows||'<tr><td colspan="9" class="mu">Chưa có đoạn nào.</td></tr>'}${s.sections.length?`<tr><th colspan="3">Tổng</th><th>${tot[0]}</th><th>${tot[1]}</th><th colspan="4"></th></tr>`:''}</table></div></div>`;
-}
-function secForm(id){
-  const s=station();s.sections=s.sections||[];const x=s.sections.find(y=>y.id===id)||{pipe:'114'};
-  const i=(k,l,a='')=>`<div><label>${l}</label><input id="s_${k}" value="${esc(x[k]??'')}" ${a}></div>`;
-  dlg(`<h3 style="margin-top:0">${id?'Sửa':'Thêm'} đoạn điểm nút</h3>
-  ${i('chain','Đoạn điểm nút (theo Ký hiệu)','placeholder="1-2-3-7-9-15-17" onchange="if(!$(\'#s_len\').value)calcLen()"')}
-  <div class="g">${i('pipe','Cấp ống (mm)','inputmode="numeric"')}${i('len','Chiều dài (m)','inputmode="decimal"')}${i('cust','Số lượng khách hàng','inputmode="numeric"')}</div>
-  <div class="row" style="margin-top:6px"><button onclick="calcLen()">📏 Tính chiều dài từ tọa độ</button><span class="mu" id="sm"></span></div>
-  <label>Điểm thay đổi cấp ống (vị trí · loại · cấp ống)</label><div id="chg"></div>
-  <div class="row" style="margin-top:2px"><button type="button" onclick="addChg()">+ Thêm điểm thay đổi</button><button type="button" onclick="fillChg()">Điền các điểm trong đoạn</button></div>
-  <div class="mu">T = Tê, C = Cút, B = Bít. Ví dụ: điểm 18 · T · 114/27.</div>
-  ${i('note','Ghi chú')}
-  <div class="row" style="margin-top:14px"><span class="sp"></span><button onclick="$('#dlg').close()">Hủy</button><button class="p" onclick="saveSec('${id||''}')">Lưu</button></div>`);
-  const pc=parseChanges(x.changes);pc.pts.forEach((pt,k)=>{const m=String(pc.types[k]).match(/^([A-Za-zĐđ]*)\s*(.*)$/);addChg(pt,m[1],m[2])});
-  if(!pc.pts.length)addChg();
-}
-function addChg(pt='',ty='',pp=''){
-  const d=document.createElement('div'),op=['T','C','B'];d.className='row';d.style.marginBottom='6px';
-  d.innerHTML=`<input class="cp" style="width:80px" placeholder="Điểm" inputmode="numeric" value="${esc(pt)}"><select class="ct" style="width:120px">${[['T','T - Tê'],['C','C - Cút'],['B','B - Bít'],['','Khác']].map(([v,l])=>`<option value="${v}" ${v===ty?'selected':''}>${l}</option>`).join('')}${ty&&!op.includes(ty)?`<option value="${esc(ty)}" selected>${esc(ty)}</option>`:''}</select><input class="cl" style="width:110px" placeholder="Cấp ống" value="${esc(pp)}"><button type="button" class="d" onclick="this.parentNode.remove()">✕</button>`;
-  $('#chg').appendChild(d);
-}
-function fillChg(){
-  const have=[...document.querySelectorAll('#chg .cp')].map(i=>i.value.trim()),pts=($('#s_chain').value.match(/\d+/g)||[]).slice(1);
-  document.querySelectorAll('#chg > div').forEach(d=>{if(!d.querySelector('.cp').value.trim()&&!d.querySelector('.cl').value.trim())d.remove()});
-  pts.filter(x=>!have.includes(x)).forEach(x=>addChg(x,'T',$('#s_pipe').value.trim()));
-}
-function chgText(){
-  return [...document.querySelectorAll('#chg > div')].map(d=>{const pt=d.querySelector('.cp').value.trim(),ty=d.querySelector('.ct').value,pp=d.querySelector('.cl').value.trim();return pt?`${pt} ${ty}${pp}`.trim():''}).filter(Boolean).join('\n');
-}
-function lenOf(s,chain){
-  const pt=(String(chain).match(/\d+/g)||[]).map(Number);let km=0,miss=0;
-  for(let k=1;k<pt.length;k++){const a=s.customers[pt[k-1]-1],b=s.customers[pt[k]-1];if(a&&b&&a.lat!=null&&b.lat!=null)km+=hav(a.lat,a.lng,b.lat,b.lng);else miss++}
-  return {m:Math.round(km*1000),miss,n:pt.length,pipe:(s.customers[pt[0]-1]||{}).pipe||''};
-}
-function calcAll(){
-  const s=station(),L=s.sections||[],o=$('#sm2');
-  if(!L.length){o.className='err';o.textContent='Chưa có đoạn nào để tính.';return}
-  if(L.some(x=>x.len)&&!confirm('Tính lại sẽ ghi đè chiều dài đang có. Tiếp tục?'))return;
-  let ok=0,bad=0;
-  L.forEach(x=>{const r=lenOf(s,x.chain);if(r.n>=2&&r.miss<r.n-1){x.len=String(r.m);ok++;if(r.miss)bad++}else bad++;if(!x.pipe&&r.pipe)x.pipe=String(r.pipe)});
-  save();refresh();const m=$('#sm2');m.className=bad?'err':'ok';m.textContent=`Đã tính ${ok}/${L.length} đoạn${bad?` · ${bad} đoạn thiếu tọa độ hoặc chưa đủ điểm (chiều dài chỉ tính phần có tọa độ)`:''}. Đây là khoảng cách đường thẳng.`;
-}
-function calcLen(){
-  const s=station(),r=lenOf(s,$('#s_chain').value),pt={length:r.n},miss=r.miss,km=r.m/1000;
-  if(pt.length<2){$('#sm').textContent='Nhập đoạn điểm nút trước (vd 1-2-3).';return}
-  if(!$('#s_pipe').value&&r.pipe)$('#s_pipe').value=r.pipe;
-  $('#s_len').value=Math.round(km*1000);$('#sm').textContent='Đường thẳng giữa các điểm'+(miss?` · ${miss} đoạn thiếu tọa độ nên chưa tính`:'')+' — sửa lại nếu đo thực tế khác.';
-}
-function saveSec(id){
-  const v=k=>$('#s_'+k).value.trim(),s=station();s.sections=s.sections||[];
-  if(!v('chain')){alert('Vui lòng nhập đoạn điểm nút, ví dụ 1-2-3');return}
-  let x=s.sections.find(y=>y.id===id);if(!x){x={id:uid()};s.sections.push(x)}
-  ['chain','pipe','len','cust','note'].forEach(k=>x[k]=v(k));x.changes=chgText();save();$('#dlg').close();refresh();
-}
-function delSec(id){if(confirm('Xóa đoạn này?')){const s=station();s.sections=s.sections.filter(x=>x.id!==id);save();refresh()}}
-let mapLines=st.get('ctl:ln')==='1';
-const fmtD=km=>km<1?Math.round(km*1000)+' m':km.toFixed(2).replace('.',',')+' km';
-const validP=s=>s.customers.map((c,i)=>({c,i:i+1})).filter(p=>p.c.lat!=null&&p.c.lng!=null&&Math.abs(p.c.lat)<=90&&Math.abs(p.c.lng)<=180);
-function ptLabel(i,c){return i+'. '+(c.name||'')}
-function segs(s){const P=validP(s);return P.slice(1).map((p,j)=>({a:P[j].i,b:p.i,km:hav(P[j].c.lat,P[j].c.lng,p.c.lat,p.c.lng)}))}
-function gmButtons(s){
-  const P=validP(s);if(!P.length)return '';
-  const ch=[];for(let i=0;i<P.length;i+=9){const g=P.slice(i,i+10);if(g.length>1||!ch.length)ch.push(g)}
-  const L=ch.map(g=>{const u=g.length>1?'https://www.google.com/maps/dir/'+g.map(p=>p.c.lat+','+p.c.lng).join('/'):`https://www.google.com/maps/search/?api=1&query=${g[0].c.lat},${g[0].c.lng}`;
-    return `<a href="${u}" target="_blank" rel="noopener"><button type="button" class="p">🗺 Google Maps${ch.length>1?` (điểm ${g[0].i}–${g[g.length-1].i})`:''}</button></a>`}).join(' ');
-  return L+` <button onclick="exportCsv()">⬇ CSV cho Google My Maps</button>`;
-}
-function segTable(s){
-  const g=segs(s);if(!g.length)return '';
-  const tot=g.reduce((x,y)=>x+y.km,0);
-  return `<details open style="margin-top:10px"><summary>Khoảng cách giữa các điểm liên tiếp (đường thẳng) · tổng ${fmtD(tot)}</summary><div class="tw"><table><tr><th>Từ điểm</th><th>Đến điểm</th><th>Chiều dài</th></tr>${g.map(x=>`<tr><td>${x.a}</td><td>${x.b}</td><td>${fmtD(x.km)}</td></tr>`).join('')}</table></div>
-  <p class="mu">Google Maps (nút xanh) hiển thị tuyến theo đường đi và quãng đường của Google, có thể khác khoảng cách đường thẳng ở trên.</p></details>`;
-}
-async function exportCsv(){
-  const s=station(),q2=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-  const rows=[['Name','Latitude','Longitude','Ký hiệu','Mã KH','SĐT']].concat(validP(s).map(p=>[ptLabel(p.i,p.c),p.c.lat,p.c.lng,p.i,p.c.code,p.c.phone]));
-  const txt='\ufeff'+rows.map(r=>r.map(q2).join(',')).join('\r\n'),fn=`TOA_DO_${s.code}.csv`,m=$('#msg');
-  try{const dl=await (window.claude?.use?.('downloads')||null);
-    if(dl)await dl.save({filename:fn,data:txt});else{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/csv'}));a.download=fn;a.click()}
-    m.className='ok';m.textContent='Đã tạo '+fn+'. Vào mymaps.google.com → Tạo bản đồ mới → Nhập, chọn cột Latitude/Longitude và Name.'}
-  catch(e){m.className='err';m.textContent=e&&e.code==='declined'?'Bạn đã hủy lưu file.':'Không xuất được file.'}
-}
-function drawSvg(s){
-  const P=s.customers.map((c,i)=>({c,i:i+1})).filter(p=>p.c.lat!=null&&p.c.lng!=null&&Math.abs(p.c.lat)<=90&&Math.abs(p.c.lng)<=180);
-  if(!P.length)return '<p class="mu">Chưa có điểm nào có tọa độ để vẽ.</p>';
-  const W=720,H=460,M=40,la=P.map(p=>p.c.lat),lo=P.map(p=>p.c.lng);
-  let a=Math.min(...la),b=Math.max(...la),c0=Math.min(...lo),d=Math.max(...lo);
-  const k=Math.cos((a+b)/2*Math.PI/180);
-  let sw=(d-c0)*k,sh=b-a;if(sw<2e-4&&sh<2e-4){sw=sh=2e-4}
-  const sc=Math.min((W-2*M)/(sw||1e-9),(H-2*M)/(sh||1e-9)),ox=(W-sw*sc)/2,oy=(H-sh*sc)/2;
-  const X=g=>ox+(g-c0)*k*sc,Y=l=>oy+(b-l)*sc;
-  let g='';for(let i=0;i<=4;i++){const x=M+i*(W-2*M)/4,y=M+i*(H-2*M)/4;g+=`<line x1="${x}" y1="${M}" x2="${x}" y2="${H-M}" stroke="var(--bd)"/><line x1="${M}" y1="${y}" x2="${W-M}" y2="${y}" stroke="var(--bd)"/>`}
-  const mpp=111320/sc,nice=[10,20,50,100,200,500,1000,2000,5000,10000,20000,50000].find(n=>n/mpp>70)||50000;
-  const bar=`<line x1="${M}" y1="${H-14}" x2="${M+nice/mpp}" y2="${H-14}" stroke="var(--tx)" stroke-width="3"/><text x="${M+nice/mpp+6}" y="${H-10}" font-size="12" fill="var(--tx)">${nice>=1000?nice/1000+' km':nice+' m'}</text>`;
-  const line=mapLines&&P.length>1?`<polyline fill="none" stroke="var(--pr)" stroke-width="1.5" stroke-dasharray="5 4" points="${P.map(p=>X(p.c.lng)+','+Y(p.c.lat)).join(' ')}"/>`+segs(s).map(x=>{const A=P.find(p=>p.i===x.a).c,B=P.find(p=>p.i===x.b).c;return `<text x="${(X(A.lng)+X(B.lng))/2}" y="${(Y(A.lat)+Y(B.lat))/2-5}" text-anchor="middle" font-size="11" fill="var(--tx)" stroke="var(--bg)" stroke-width="3" paint-order="stroke">${fmtD(x.km)}</text>`}).join(''):'';
-  const pts=P.map(p=>{const bad=issuesOf(s,p.c).length>0,x=X(p.c.lng),y=Y(p.c.lat);
-    return `<g style="cursor:pointer" onclick="showPt('${p.c.id}',${p.i})"><circle cx="${x}" cy="${y}" r="11" fill="${bad?'var(--dg)':'var(--pr)'}" stroke="var(--card)" stroke-width="2"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">${p.i}</text><text x="${x+15}" y="${y+4}" font-size="11" font-weight="bold" fill="var(--tx)" stroke="var(--bg)" stroke-width="3" paint-order="stroke">${esc(ptLabel(p.i,p.c))}</text></g>`}).join('');
-  const lab=`<text x="${M}" y="16" font-size="11" fill="var(--mu)">Bắc ↑ · X: ${b.toFixed(5)} (trên) – ${a.toFixed(5)} (dưới) · Y: ${c0.toFixed(5)} (trái) – ${d.toFixed(5)} (phải)</text>`;
-  return `<div class="tw"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:480px;background:var(--bg);border:1px solid var(--bd);border-radius:8px">${g}${lab}${line}${pts}${bar}</svg></div><div class="mu">${P.length}/${s.customers.length} điểm có tọa độ · chấm đỏ là điểm cần kiểm tra lại</div>`;
-}
-/* ===== Tải thư viện khi cần (không chặn lúc mở app) ===== */
-const CDN='https://cdnjs.cloudflare.com/ajax/libs/';
-const addJs=h=>new Promise((ok,no)=>{const x=document.createElement('script');x.src=h;x.crossOrigin='anonymous';x.onload=ok;x.onerror=()=>no(new Error('Không tải được '+h));document.head.appendChild(x)});
-const addCss=h=>new Promise((ok,no)=>{const l=document.createElement('link');l.rel='stylesheet';l.href=h;l.crossOrigin='anonymous';l.onload=ok;l.onerror=()=>no(new Error('css'));document.head.appendChild(l)});
-const LIB={
-  leaflet:()=>window.L?0:Promise.all([addCss(CDN+'leaflet/1.9.4/leaflet.min.css'),addJs(CDN+'leaflet/1.9.4/leaflet.min.js')]),
-  excel:()=>window.ExcelJS?0:addJs(CDN+'exceljs/4.4.0/exceljs.min.js')
-};
-const libP={};
-const lib=k=>libP[k]||(libP[k]=Promise.resolve(LIB[k]()).catch(e=>{delete libP[k];throw e}));
-const prewarm=()=>{if(user&&navigator.onLine)setTimeout(()=>{lib('leaflet').catch(()=>{});lib('excel').catch(()=>{})},2500)};
+/* ---------- Chặn bản cũ ---------- */
+const vlt=(a,b)=>{a=String(a).split('.');b=String(b).split('.');for(let i=0;i<3;i++){const x=+a[i]||0,y=+b[i]||0;if(x!=y)return x<y}return false};
+function blockApp(min){const ov=$('ack');ov.classList.add('on');ov.innerHTML=`<div class="sheet"><div class="sh-h"><span>⛔ Cần cập nhật ứng dụng</span></div><div class="sh-b"><h2>Phiên bản ${esc(VER)} không còn được hỗ trợ</h2><p class="nb">Vui lòng cài bản mới (từ ${esc(min)} trở lên) do quản trị viên cung cấp rồi mở lại ứng dụng.</p></div></div>`}
+/* ---------- Đồng bộ ---------- */
+async function sync(){
+if(!API_URL)return;
+try{const j=await(await fetch(API_URL+'?v='+VER+'&t='+Date.now())).json();
+ if(j&&j.ok){if(j.min){ls.set('minv',j.min);if(vlt(VER,j.min)){blockApp(j.min);return}}
+ if(!PW){applyPrices(j.prices);SRV={ts:j.updated||null,src:'máy chủ'};cache(j.prices||{},j.updated||null)}
+  N=j.notices||[];ls.set('notices',N);
+  if(ACK===null){const nr=N.find(n=>n.req);ACK=N.filter(n=>!nr||n.id!==nr.id).map(n=>n.id);ls.set('acked',ACK);SEEN=ACK.slice();ls.set('seen',SEEN)}
+  SRV.off=0}}catch(e){SRV.off=1}
+flush();if(!PW){pr();run()}nt();gate()}
+async function flush(){if(!API_URL||!Q.length)return;const rest=[];for(const r of Q.slice()){try{await post(Object.assign({action:'ack'},r))}catch(e){rest.push(r)}}Q=rest;ls.set('ackq',Q)}
 
-/* ===== Bản đồ: dựng một lần, chỉ cập nhật lớp điểm/đường ===== */
-let lmap=null,lgrp=null,gpsGrp=null,fitted=false,lbls=[],pins=[],selId=null,fsOn=false,mapLabels=st.get('ctl:lbl')!=='0';
-function destroyMap(){
-  try{if(lmap)lmap.remove()}catch(e){}lmap=null;lgrp=null;gpsGrp=null;fitted=false;lbls=[];pins=[];selId=null;
-  if(fsOn){fsOn=false;document.documentElement.classList.remove('nsc');if(history.state&&history.state.fs)history.back()}
-}
-/* Toàn màn hình: nút Back của điện thoại cũng thoát được */
-function mapFs(on){
-  const w=$('#mapwrap');if(!w)return;on=on===undefined?!fsOn:!!on;if(on===fsOn)return;
-  fsOn=on;w.classList.toggle('fs',on);document.documentElement.classList.toggle('nsc',on);
-  if(on)history.pushState({fs:1},'');else if(history.state&&history.state.fs)history.back();
-  const b=$('#mc_fs');if(b){b.textContent=on?'✕':'⛶';b.title=on?'Thoát toàn màn hình':'Toàn màn hình'}
-  setTimeout(()=>{if(lmap){lmap.invalidateSize();declutter()}},60);
-}
-addEventListener('popstate',()=>{if(fsOn)mapFs(false)});
-addEventListener('keydown',e=>{if(e.key==='Escape'&&fsOn)mapFs(false)});
-function mapCtl(){
-  const C=L.control({position:'topleft'});
-  C.onAdd=()=>{
-    const d=L.DomUtil.create('div','mc');
-    d.innerHTML=`<button id="mc_fs" type="button" title="${fsOn?'Thoát toàn màn hình':'Toàn màn hình'}" onclick="mapFs()">${fsOn?'✕':'⛶'}</button><button type="button" title="Xem tất cả điểm" onclick="mapFit()">⤢</button><button id="mc_lb" type="button" title="Hiện / ẩn tên khách hàng" onclick="toggleLbl()" class="${mapLabels?'on':''}">Aa</button><button id="mc_ln" type="button" title="Nối điểm &amp; hiện chiều dài" onclick="toggleLines()" class="${mapLines?'on':''}">〰</button><button id="mc_gp" type="button" title="Vị trí của tôi" onclick="mapLocate()">◎</button>`;
-    L.DomEvent.disableClickPropagation(d);return d};
-  return C;
-}
-function toggleLbl(){mapLabels=!mapLabels;st.set('ctl:lbl',mapLabels?'1':'0');const b=$('#mc_lb');if(b)b.classList.toggle('on',mapLabels);declutter()}
-function toggleLines(){mapLines=!mapLines;st.set('ctl:ln',mapLines?'1':'0');const b=$('#mc_ln');if(b)b.classList.toggle('on',mapLines);updateMap(false)}
-function mapFit(){const s=station();if(!lmap||!s)return;const ll=validP(s).map(p=>[p.c.lat,p.c.lng]);if(!ll.length)return;ll.length===1?lmap.setView(ll[0],18):lmap.fitBounds(ll,{padding:[40,40],maxZoom:18})}
-function mapLocate(){
-  if(!lmap)return;const b=$('#mc_gp');
-  if(!navigator.geolocation){toast('Thiết bị không hỗ trợ GPS.');return}
-  b.classList.add('on');
-  navigator.geolocation.getCurrentPosition(p=>{
-    b.classList.remove('on');if(!lmap)return;
-    const ll=[p.coords.latitude,p.coords.longitude];gpsGrp.clearLayers();
-    L.circle(ll,{radius:p.coords.accuracy,color:'#1a73e8',weight:1,fillOpacity:.12,interactive:false}).addTo(gpsGrp);
-    L.circleMarker(ll,{radius:7,color:'#fff',weight:2,fillColor:'#1a73e8',fillOpacity:1,interactive:false}).addTo(gpsGrp);
-    lmap.setView(ll,Math.max(lmap.getZoom(),18));
-  },e=>{b.classList.remove('on');toast('Không lấy được GPS: '+e.message)},{enableHighAccuracy:true,timeout:20000});
-}
-function buildMap(el){
-  lmap=L.map(el,{maxZoom:21});
-  const o={crossOrigin:true,maxZoom:21,updateWhenIdle:true,keepBuffer:3};
-  const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{...o,maxNativeZoom:19,attribution:'© OpenStreetMap'}),
-  sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{...o,maxNativeZoom:17,attribution:'Tiles © Esri'}),
-  mb=L.tileLayer('https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg90?access_token=pk.eyJ1IjoiY3NraCIsImEiOiJjbXV0aHNrZmYxNHV2MzRxNHZ3Mm95ZWMzIn0.VLlN1l6UQxjaka0yDSz9IQ',{...o,maxNativeZoom:20,attribution:'© Mapbox © Maxar'});
-  const base={'Bản đồ':osm,'Vệ tinh':sat,'Vệ tinh nét (Mapbox)':mb};(base[st.get('ctl:base')]||osm).addTo(lmap);L.control.layers(base).addTo(lmap);mapCtl().addTo(lmap);lmap.on('baselayerchange',e=>st.set('ctl:base',e.name));
-  lgrp=L.layerGroup().addTo(lmap);gpsGrp=L.layerGroup().addTo(lmap);fitted=false;
-  lmap.on('zoomend',()=>el.classList.toggle('zs',lmap.getZoom()<17));lmap.on('zoomend moveend',declutter);lmap.on('click',()=>{if(selId)selPt(null)});
-}
+/* ---------- Thông báo bắt buộc ---------- */
+const chg=n=>n.changes&&n.changes.length?'<div class="chg">'+n.changes.map(c=>`<div class="cr"><span>${esc(c.n)}</span><span class="${c.v>c.o?'up':'dn'}"><s>${f(c.o)}</s> → <b>${f(c.v)}</b> ${c.v>c.o?'▲':'▼'}</span></div>`).join('')+'</div>':'';
+const bdy=n=>n.body?`<p class="nb">${esc(n.body)}</p>`:'';
+function gate(){const ov=$('ack');if(ov.classList.contains('on'))return;const n=[...N].reverse().find(x=>x.req&&!(ACK||[]).includes(x.id));if(!n)return;
+ov.innerHTML=`<div class="sheet"><div class="sh-h ${n.type}"><span>${n.type=='price'?'💲 Thay đổi đơn giá':'📢 Thông báo từ quản trị'}</span><small>${esc(n.ts)}</small></div><div class="sh-b"><h2>${esc(n.title)}</h2>${bdy(n)}${chg(n)}</div><div class="sh-f"><label>Họ tên / mã nhân viên của bạn</label><input id="aname" value="${esc(USER.name)}" placeholder="Nhập để xác nhận…" maxlength="80"><button class="p" id="aok">✔ Tôi đã đọc và xác nhận</button><p class="hint">Bạn cần bấm xác nhận để tiếp tục sử dụng ứng dụng.</p></div></div>`;
+ov.classList.add('on');
+$('aok').onclick=async()=>{const name=$('aname').value.trim();if(!name){toast('Vui lòng nhập họ tên / mã nhân viên');$('aname').focus();return}
+ $('aok').disabled=true;$('aok').textContent='Đang gửi xác nhận…';USER.name=name;ls.set('user',USER);
+ const rec={nid:n.id,name:name,dev:USER.dev,ver:VER};
+ try{await post(Object.assign({action:'ack'},rec))}catch(e){Q.push(rec);ls.set('ackq',Q);toast('Chưa gửi được, app sẽ tự gửi lại khi có mạng')}
+ ACK.push(n.id);ls.set('acked',ACK);ov.classList.remove('on');ov.innerHTML='';nt();gate()}}
 
-const lblText=c=>{const n=(c.name||'').trim();return /^Điểm \d+$/.test(n)?(c.code||''):n};
-/* Tên hiển thị luôn, nhưng tự ẩn nhãn nào bị đè lên điểm/nhãn khác (ưu tiên: điểm đang chọn, điểm lỗi, rồi theo thứ tự). Zoom gần hơn sẽ hiện thêm. */
-function declutter(){
-  if(!lmap||!lbls.length)return;
-  const sz=lmap.getSize(),lab=[],ov=(a,b)=>a[0]<b[2]&&a[2]>b[0]&&a[1]<b[3]&&a[3]>b[1];
-  const pr=pins.map(p=>{const q=lmap.latLngToContainerPoint(p.ll);return {id:p.id,r:[q.x-13,q.y-13,q.x+13,q.y+13]}});
-  const free=(r,own)=>!lab.some(b=>ov(r,b))&&!pr.some(p=>p.id!==own&&ov(r,p.r));
-  const inView=r=>r[2]>0&&r[0]<sz.x&&r[3]>0&&r[1]<sz.y;
-  lbls.forEach(o=>{
-    const m=o.mk.getElement();if(!m)return;
-    const e=o.el||(o.el=o.kind==='seg'?m:m.querySelector('.plb'));if(!e)return;
-    const q=lmap.latLngToContainerPoint(o.ll),w=Math.min(o.kind==='seg'?90:160,o.txt.length*6.8+14);
-    let vis=false,left=false,r;
-    if(o.kind==='seg'){r=[q.x-w/2,q.y-9,q.x+w/2,q.y+9];vis=mapLines&&inView(r)&&free(r,null)}
-    else if(mapLabels||o.sel){
-      r=[q.x+17,q.y-10,q.x+17+w,q.y+10];
-      if(r[2]>sz.x-4){const r2=[q.x-17-w,q.y-10,q.x-17,q.y+10];if(o.sel||free(r2,o.id)){r=r2;left=true}}
-      vis=inView(r)&&(o.sel||free(r,o.id));
-    }
-    if(vis)lab.push(r);
-    e.classList.toggle('hid',!vis);
-    if(o.kind!=='seg')e.classList.toggle('l',left);
-  });
-}
-async function updateMap(fit){
-  let s=station(),box=$('#mapbox');if(!s||!box)return;
-  const id=s.id,P=validP(s);
-  if(!P.length){destroyMap();box.innerHTML='<p class="mu" style="padding:12px">Chưa có điểm nào có tọa độ để vẽ.</p>';return}
-  if(!window.L){
-    if(!lmap)box.innerHTML='<p class="mu" style="padding:12px"><span class="spin">⟳</span> Đang tải bản đồ…</p>';
-    try{await lib('leaflet')}catch(e){
-      if(view.id!==id||!$('#mapbox'))return;
-      s=station();if(s){$('#mapbox').innerHTML=drawSvg(s)}return;
-    }
-    if(view.id!==id||!$('#mapbox'))return;
-    s=station();box=$('#mapbox');if(!s)return;
-  }
-  const P2=validP(s);
-  let el=$('#lmap');
-  if(!lmap||!el){destroyMap();box.innerHTML=`<div id="lmap" style="height:480px;border:1px solid var(--bd);border-radius:10px;position:relative;z-index:0"></div><div class="mu" id="mapnote"></div>`;buildMap($('#lmap'))}
-  lgrp.clearLayers();lbls=[];pins=[];
-  const ll=P2.map(p=>[p.c.lat,p.c.lng]);
-  if(mapLines&&P2.length>1){
-    L.polyline(ll,{color:'#fff',weight:7,opacity:.85,interactive:false}).addTo(lgrp);
-    L.polyline(ll,{color:'#0b6fb8',weight:3,dashArray:'6 6',interactive:false}).addTo(lgrp);
-    const by=new Map(P2.map(p=>[p.i,p.c]));
-    segs(s).forEach(x=>{const A=by.get(x.a),B=by.get(x.b),pos=[(A.lat+B.lat)/2,(A.lng+B.lng)/2],t=fmtD(x.km);
-      const mk=L.marker(pos,{interactive:false,keyboard:false,icon:L.divIcon({className:'',iconSize:[0,0],html:`<div class="seg">${t}</div>`})}).addTo(lgrp);
-      lbls.push({kind:'seg',ll:pos,txt:t,pri:3,mk})});
-  }
-  P2.forEach(p=>{
-    const c=p.c,bad=issuesOf(s,c).length>0,sel=c.id===selId,t=lblText(c),pos=[c.lat,c.lng];
-    const mk=L.marker(pos,{zIndexOffset:sel?2000:bad?500:0,icon:L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],html:`<div class="pin${bad?' bad':''}${sel?' sel':''}${p.i>99?' sm':''}">${p.i}</div>${t?`<div class="plb">${esc(t)}</div>`:''}`})}).addTo(lgrp).on('click',()=>showPt(c.id,p.i));
-    pins.push({id:c.id,ll:pos});
-    if(t)lbls.push({kind:'pt',id:c.id,ll:pos,txt:t,sel,pri:sel?0:bad?1:2,mk});
-  });
-  lbls.sort((a,b)=>a.pri-b.pri);
-  if(fit||!fitted){fitted=true;if(ll.length===1)lmap.setView(ll[0],18);else lmap.fitBounds(ll,{padding:[40,40],maxZoom:18})}
-  $('#lmap').classList.toggle('zs',lmap.getZoom()<17);
-  declutter();
-  const sp=selId&&P2.find(x=>x.c.id===selId);
-  if(sp)fillInfo(sp.c,sp.i);else if(selId){selId=null;$('#ptinfo').innerHTML=''}
-  $('#mapnote').textContent=`${P2.length}/${s.customers.length} điểm có tọa độ · chấm đỏ là điểm cần kiểm tra lại · nút ⛶ để xem toàn màn hình`;
-}
-function fillInfo(c,i){
-  const s=station(),t=issues(c.lat,c.lng,s,c.id);
-  $('#ptinfo').innerHTML=`<div class="row"><b class="sp">${i}. ${esc(c.name)}</b><button onclick="selPt(null)" aria-label="Đóng" style="min-height:36px">✕</button></div>
-  <div class="mu">${[c.code,c.phone,c.pipe&&('Ống '+c.pipe)].filter(Boolean).map(esc).join(' · ')||'Chưa có mã KH / SĐT'}</div><div class="mu">${c.lat}, ${c.lng}</div>${t.length?`<div class="err sm">⚠ ${esc(t.join('; '))}</div>`:''}
-  <div class="row" style="margin-top:8px"><a target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}"><button type="button" class="p">Chỉ đường</button></a><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${c.lat},${c.lng}&t=k"><button type="button">Ảnh vệ tinh</button></a><button type="button" onclick="custForm('${c.id}')">Sửa</button></div>`;
-}
-async function showPt(id,i){
-  const c=station().customers.find(x=>x.id===id);if(!c)return;
-  selId=id;fillInfo(c,i);
-  if(lmap){await updateMap(false);if(lmap&&fsOn){const q=lmap.latLngToContainerPoint([c.lat,c.lng]),h=lmap.getSize().y;if(q.y>h-210)lmap.panBy([0,q.y-(h-210)])}}
-}
-function selPt(id){selId=id;if(!id)$('#ptinfo').innerHTML='';if(lmap)updateMap(false)}
-async function gotoPt(id){
-  const s=station(),i=s.customers.findIndex(c=>c.id===id),c=s.customers[i];if(!c||c.lat==null)return;
-  setTab('map');await updateMap(false);if(!lmap)return;
-  lmap.setView([c.lat,c.lng],19);showPt(id,i+1);
-}
-const F=['name','code','phone','pipe','lat','lng','adjName','adjCode','adjPipe','feedName','feedCode','feedPipe'];
-function custForm(id){
-  const s=station(),c=s.customers.find(x=>x.id===id)||{pipe:'114'};
-  const i=(k,l,x='')=>`<div><label>${l}</label><input id="c_${k}" value="${esc(c[k]??'')}" ${x}></div>`;
-  dlg(`<h3 style="margin-top:0">${id?'Sửa':'Thêm'} khách hàng</h3><div class="g">${i('name','Tên tại điểm ký hiệu')}${i('code','Mã KH',`placeholder="${esc(s.code)}.0001"`)}${i('phone','SĐT','inputmode="tel"')}${i('pipe','Các cấp ống hiện hữu')}</div>
-  <p class="mu">Chỉ cần nhập thông tin đang có, các ô còn lại có thể bổ sung sau. Để trống tên thì app tự đặt “Điểm N”.</p>
-  <label>Tọa độ Google Map</label><div class="row"><button class="p" onclick="gps()">📡 Lấy vị trí hiện tại</button><button onclick="checkCoord('${id||''}',true)">🔍 Kiểm tra trên Google Maps</button><span class="mu" id="gm"></span></div>
-  <div class="g">${i('lat','X (Vĩ độ)','inputmode="decimal"')}${i('lng','Y (Kinh độ)','inputmode="decimal"')}</div><div id="ck" style="font-size:13px;margin-top:6px"></div>
-  <label>Hoặc dán tọa độ / đường dẫn Google Maps (vd: 9.3570465, 106.1106383)</label><input id="paste" oninput="parsePaste(this.value)" placeholder="Dán tại đây">
-  <details><summary>Trạm tiếp giáp &amp; tuyến ống tiếp nước</summary><div class="g">${i('adjName','Trạm tiếp giáp - Tên trạm')}${i('adjCode','Mã trạm')}${i('adjPipe','Cấp ống')}${i('feedName','Tuyến ống tiếp nước - Tên trạm')}${i('feedCode','Mã trạm')}${i('feedPipe','Cấp ống')}</div></details>
-  <div class="row" style="margin-top:14px">${id?`<button class="d" onclick="delCust('${id}')">Xóa</button>`:''}<span class="sp"></span><button onclick="$('#dlg').close()">Hủy</button><button class="p" onclick="saveCust('${id||''}')">Lưu</button></div>`);
-}
-const num=x=>{const n=parseFloat(String(x??'').replace(',','.'));return isNaN(n)?null:n};
-function hav(a,b,c,d){const R=6371,r=Math.PI/180,x=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
-function med(a){a=[...a].sort((x,y)=>x-y);return a[Math.floor(a.length/2)]}
-function issues(lat,lng,s,selfId){
-  const o=[];
-  if(lat==null||lng==null)return ['Thiếu X hoặc Y'];
-  if(Math.abs(lat)>90||Math.abs(lng)>180)return ['Ngoài phạm vi hợp lệ (X: -90…90, Y: -180…180)'];
-  if(lat>=100&&lat<=112&&lng>=6&&lng<=24)o.push('Có thể bị đảo X và Y (vĩ độ phải khoảng 8–24 ở Việt Nam)');
-  else if(lat<8||lat>24||lng<102||lng>110)o.push('Nằm ngoài lãnh thổ Việt Nam');
-  const ot=s.customers.filter(c=>c.id!==selfId&&c.lat!=null&&c.lng!=null);
-  if(ot.length>=2){const d=hav(lat,lng,med(ot.map(c=>c.lat)),med(ot.map(c=>c.lng)));if(d>20)o.push('Cách tâm các điểm khác của trạm khoảng '+d.toFixed(0)+' km')}
-  const near=ot.find(c=>hav(lat,lng,c.lat,c.lng)<0.003);
-  if(near)o.push('Trùng vị trí với “'+near.name+'”');
-  return o;
-}
-/* Kiểm tra tọa độ cho cả danh sách: tính một lần cho mỗi lần dữ liệu thay đổi (trước đây mỗi dòng duyệt lại toàn bộ danh sách) */
-let ic={v:-1,id:null,m:null};
-function issuesOf(s,c){
-  if(ic.v!==dataVer||ic.id!==s.id)ic={v:dataVer,id:s.id,m:buildIssues(s)};
-  return ic.m.get(c.id)||[];
-}
-function buildIssues(s){
-  const m=new Map(),all=s.customers.filter(c=>c.lat!=null&&c.lng!=null);
-  const mla=all.length>=3?med(all.map(c=>c.lat)):null,mlo=all.length>=3?med(all.map(c=>c.lng)):null;
-  const CS=0.0001,grid=new Map(),key=(a,b)=>a+','+b;
-  all.forEach(c=>{const k=key(Math.round(c.lat/CS),Math.round(c.lng/CS));(grid.get(k)||grid.set(k,[]).get(k)).push(c)});
-  s.customers.forEach(c=>{
-    const o=[],lat=c.lat,lng=c.lng;
-    if(lat==null||lng==null){m.set(c.id,['Thiếu X hoặc Y']);return}
-    if(Math.abs(lat)>90||Math.abs(lng)>180){m.set(c.id,['Ngoài phạm vi hợp lệ (X: -90…90, Y: -180…180)']);return}
-    if(lat>=100&&lat<=112&&lng>=6&&lng<=24)o.push('Có thể bị đảo X và Y (vĩ độ phải khoảng 8–24 ở Việt Nam)');
-    else if(lat<8||lat>24||lng<102||lng>110)o.push('Nằm ngoài lãnh thổ Việt Nam');
-    if(mla!=null){const d=hav(lat,lng,mla,mlo);if(d>20)o.push('Cách tâm các điểm khác của trạm khoảng '+d.toFixed(0)+' km')}
-    const a=Math.round(lat/CS),b=Math.round(lng/CS);let near=null;
-    for(let i=-1;i<=1&&!near;i++)for(let j=-1;j<=1&&!near;j++){const g=grid.get(key(a+i,b+j));if(g)near=g.find(x=>x.id!==c.id&&hav(lat,lng,x.lat,x.lng)<0.003)||null}
-    if(near)o.push('Trùng vị trí với “'+near.name+'”');
-    m.set(c.id,o);
-  });
-  return m;
-}
-function checkCoord(id,open){
-  const lat=num($('#c_lat').value),lng=num($('#c_lng').value),e=$('#ck'),is=issues(lat,lng,station(),id);
-  const u=`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,sat=`https://www.google.com/maps?q=${lat},${lng}&t=k`;
-  const lk=lat!=null&&lng!=null?` · <a target="_blank" rel="noopener" href="${u}">Mở Google Maps</a> · <a target="_blank" rel="noopener" href="${sat}">Ảnh vệ tinh</a>`:'';
-  if(open&&lat!=null&&lng!=null&&Math.abs(lat)<=90&&Math.abs(lng)<=180)window.open(u,'_blank','noopener');
-  e.innerHTML=is.length?`<span class="err">⚠ ${is.map(esc).join('; ')}</span>${lk}`:`<span class="ok">✓ Tọa độ hợp lệ: ${lat}, ${lng}</span>${lk}`;
-}
-function setLL(a,b){$('#c_lat').value=a;$('#c_lng').value=b}
-function parsePaste(t){
-  const m=t.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/)||t.match(/(-?\d+\.\d+)[\s,;]+(-?\d+\.\d+)/);
-  if(m){setLL(m[1],m[2]);checkCoord('')}
-}
-function gps(){
-  const g=$('#gm');if(!navigator.geolocation){g.textContent='Thiết bị không hỗ trợ GPS.';return}
-  g.textContent='Đang lấy vị trí…';
-  navigator.geolocation.getCurrentPosition(p=>{setLL(p.coords.latitude.toFixed(7),p.coords.longitude.toFixed(7));checkCoord('');g.textContent='Sai số ≈ '+Math.round(p.coords.accuracy)+' m'},
-  e=>{g.textContent='Không lấy được GPS ('+e.message+'). Hãy dán tọa độ từ Google Maps.'},{enableHighAccuracy:true,timeout:20000});
-}
-function saveCust(id){
-  const v=k=>$('#c_'+k).value.trim();
-  const lat=v('lat')?parseFloat(v('lat').replace(',','.')):null,lng=v('lng')?parseFloat(v('lng').replace(',','.')):null;
-  if((v('lat')&&isNaN(lat))||(v('lng')&&isNaN(lng))){alert('Tọa độ phải là số thập phân, ví dụ 9.3570465');return}
-  const s=station();let c=s.customers.find(x=>x.id===id);
-  if(!c){c={id:uid()};s.customers.push(c)}
-  F.forEach(k=>c[k]=v(k));c.lat=lat;c.lng=lng;
-  if(!c.name)c.name='Điểm '+(s.customers.indexOf(c)+1);
-  save();$('#dlg').close();refresh();
-}
-function delCust(id){if(confirm('Xóa khách hàng này?')){$('#dlg').close();const s=station();s.customers=s.customers.filter(c=>c.id!==id);save();refresh()}}
-function dlg(h){const d=$('#dlg');d.innerHTML=h;d.showModal()}
+/* ---------- Tab thông báo ---------- */
+function nt(){const un=N.filter(n=>!(SEEN||[]).includes(n.id)).length,b=$('bd');b.textContent=un;b.className=un&&$('p3').hidden?'on':'';
+$('uname').value!==USER.name&&document.activeElement!==$('uname')&&($('uname').value=USER.name);
+$('nl').innerHTML=N.length?N.map(n=>`<div class="nc ${n.type}"><div class="nh"><b>${n.type=='price'?'💲':'📢'} ${esc(n.title)}</b><div class="tags">${n.req?'<i class="tg r">Bắt buộc</i>':''}<i class="tg">${n.type=='price'?'Đơn giá':'Thông báo'}</i></div></div><small>${esc(n.ts)}</small>${bdy(n)}${chg(n)}<div class="ns">${(ACK||[]).includes(n.id)?'<span class="okk">✔ Bạn đã xác nhận</span>':'<span>Thông báo thường</span>'}</div>${PW?`<div class="ab"><button data-a="${n.id}">👥 Ai đã xác nhận</button><button class="dl" data-d="${n.id}">Thu hồi</button></div>`:''}</div>`).join(''):'<div class="card badge">Chưa có thông báo nào.</div>'}
+$('nl').onclick=async e=>{const t=e.target.closest('button');if(!t||!PW)return;
+if(t.dataset.a){openMd('<h2>👥 Người đã xác nhận</h2><p>Đang tải…</p>');try{const j=await post({action:'acks',pw:PW,nid:t.dataset.a});if(!j.ok)throw 0;
+ openMd(`<h2>👥 Người đã xác nhận (${j.list.length})</h2>${j.list.length?j.list.map(x=>`<div class="al"><b>${esc(x.name)}</b><span>${esc(x.at)}</span></div>`).join(''):'<p>Chưa có ai xác nhận.</p>'}<p class="hint">Toàn bộ dữ liệu lưu trong Google Sheet "Bảng chiết tính – Xác nhận thông báo" trên Drive của bạn.</p><button class="p s" onclick="closeMd()">Đóng</button>`)}catch(x){openMd('<h2>Lỗi</h2><p>Không tải được danh sách.</p><button class="p s" onclick="closeMd()">Đóng</button>')}}
+else if(t.dataset.d)ask('Thu hồi (xóa) thông báo này khỏi máy chủ?',async()=>{try{const j=await post({action:'del',pw:PW,nid:t.dataset.d});if(j.ok){toast('Đã thu hồi');sync()}else toast(j.error||'Lỗi')}catch(x){toast('Không kết nối được máy chủ')}},'Thu hồi')};
+$('uname').oninput=()=>{USER.name=$('uname').value.trim();ls.set('user',USER)};
+function tab(n){for(let i=1;i<=3;i++){$('p'+i).hidden=i!=n;$('t'+i).className=i==n?'on':''}
+if(n==1)run();if(n==3){SEEN=N.map(x=>x.id);ls.set('seen',SEEN)}nt();scrollTo(0,0)}
 
-/* ===== NHẬP EXCEL / CSV ===== */
-const nz=t=>String(t??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
-const cv=c=>{let v=c.value;if(v&&typeof v==='object'){if('result' in v)v=v.result;else if(v.richText)v=v.richText.map(t=>t.text).join('');else if(v.text)v=v.text;else if(v instanceof Date)v=v.toISOString()}return v==null?'':v};
-function mapCols(grid){
-  const m={};let hr=-1;
-  for(let r=0;r<Math.min(grid.length,15);r++)(grid[r]||[]).forEach((v,c)=>{
-    const t=nz(v);if(!t)return;let k=null;
-    if(t==='x'||t.includes('vi do')||/^(lat|latitude)\b/.test(t))k='lat';
-    else if(t==='y'||t.includes('kinh do')||/^(lon|lng|longitude)\b/.test(t))k='lng';
-    else if(/\bten (tai diem|khach|kh)\b/.test(t)||t==='ten'||t==='name'||t==='ten diem')k='name';
-    else if(/^ma (kh|khach)/.test(t)||t==='code')k='code';
-    else if(/sdt|dien thoai|phone/.test(t))k='phone';
-    else if(t.includes('cap ong'))k='pipe';
-    else if(t.includes('toa do'))k='both';
-    if(k&&!(k in m)){m[k]=c;hr=Math.max(hr,r)}
-  });
-  return {m,hr};
-}
-function extractRows(grid,mc){
-  const {m,hr}=mc,rows=[];
-  for(let r=hr+1;r<grid.length;r++){
-    const row=grid[r]||[],g=k=>m[k]==null?'':String(row[m[k]]??'').trim();
-    let lat=null,lng=null;
-    if(m.lat!=null&&m.lng!=null){lat=num(row[m.lat]);lng=num(row[m.lng])}
-    else if(m.both!=null){const x=String(row[m.both]??'').match(/(-?\d+[.,]\d+)\D+(-?\d+[.,]\d+)/);if(x){lat=num(x[1]);lng=num(x[2])}}
-    let phone=g('phone');if(/^\d{9}$/.test(phone))phone='0'+phone;
-    const name=g('name'),code=g('code');
-    if(lat==null&&lng==null&&!name&&!code&&!phone)continue;
-    rows.push({name,code,phone,pipe:g('pipe'),lat,lng});
-  }
-  return rows;
-}
-function parseCsv(t){
-  t=t.replace(/^\ufeff/,'');const first=t.split(/\r?\n/)[0]||'';
-  const d=[['\t',(first.match(/\t/g)||[]).length],[';',(first.match(/;/g)||[]).length],[',',(first.match(/,/g)||[]).length]].sort((a,b)=>b[1]-a[1])[0][0];
-  const out=[];let row=[],cur='',q=false;
-  for(let i=0;i<t.length;i++){const ch=t[i];
-    if(q){if(ch==='"'){if(t[i+1]==='"'){cur+='"';i++}else q=false}else cur+=ch}
-    else if(ch==='"')q=true;
-    else if(ch===d){row.push(cur);cur=''}
-    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;row.push(cur);out.push(row);row=[];cur=''}
-    else cur+=ch}
-  if(cur!==''||row.length){row.push(cur);out.push(row)}
-  return out;
-}
-let pendingImp=[];
-async function importFile(inp){
-  const f=inp.files[0];inp.value='';const m=$('#msg');if(!f)return;
-  m.className='mu';m.textContent='Đang đọc file…';
-  try{
-    const grids=[];
-    if(/\.csv$/i.test(f.name))grids.push(parseCsv(await f.text()));
-    else if(/\.xlsx$/i.test(f.name)){
-      await lib('excel').catch(()=>{throw new Error('Chưa tải được thư viện Excel. Kiểm tra mạng rồi thử lại.')});
-      const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());
-      wb.worksheets.forEach(ws=>{const g=[];for(let r=1;r<=ws.rowCount;r++){const a=[];for(let c=1;c<=ws.columnCount;c++)a.push(cv(ws.getCell(r,c)));g.push(a)}grids.push(g)});
-    }else throw new Error('Chỉ nhận file .xlsx hoặc .csv (file .xls cũ hãy lưu lại thành .xlsx).');
-    let grid=null,mc=null;
-    for(const g of grids){const x=mapCols(g);if((x.m.lat!=null&&x.m.lng!=null)||x.m.both!=null){grid=g;mc=x;break}}
-    if(!grid)throw new Error('Không tìm thấy cột tọa độ. Hàng tiêu đề cần có cột “X” (hoặc “Vĩ độ”) và “Y” (hoặc “Kinh độ”).');
-    pendingImp=extractRows(grid,mc);
-    if(!pendingImp.length)throw new Error('Không có dòng dữ liệu nào bên dưới hàng tiêu đề.');
-    const s=station(),nc=pendingImp.filter(r=>r.lat==null||r.lng==null).length;
-    const pv=pendingImp.slice(0,5).map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.code)}</td><td>${r.lat??''}</td><td>${r.lng??''}</td></tr>`).join('');
-    m.textContent='';
-    dlg(`<h3 style="margin-top:0">Nhập từ “${esc(f.name)}”</h3>
-    <p>Đọc được <b>${pendingImp.length}</b> điểm${nc?`, trong đó <span class="err">${nc} điểm thiếu tọa độ</span>`:''}.</p>
-    <div class="tw"><table><tr><th>Tên</th><th>Mã KH</th><th>X</th><th>Y</th></tr>${pv}</table></div>
-    <p class="mu">${pendingImp.length>5?'Hiển thị 5 điểm đầu. ':''}Trạm đang có ${s.customers.length} điểm.${s.customers.length?' “Thay thế” sẽ xóa các điểm cũ và đánh lại ký hiệu từ 1 (các đoạn điểm nút đã nhập cần kiểm tra lại).':''}</p>
-    <div class="row" style="margin-top:14px"><span class="sp"></span><button onclick="$('#dlg').close()">Hủy</button>${s.customers.length?'<button class="d" onclick="applyImport(\'replace\')">Thay thế tất cả</button>':''}<button class="p" onclick="applyImport(\'add\')">${s.customers.length?'Thêm vào cuối':'Nhập'}</button></div>`);
-  }catch(e){m.className='err';m.textContent=e.message||String(e)}
-}
-function applyImport(mode){
-  const s=station(),n=pendingImp.length;
-  if(mode==='replace')s.customers=[];
-  pendingImp.forEach(r=>s.customers.push({id:uid(),name:r.name||'Điểm '+(s.customers.length+1),code:r.code,phone:r.phone,pipe:r.pipe,lat:r.lat,lng:r.lng,adjName:'',adjCode:'',adjPipe:'',feedName:'',feedCode:'',feedPipe:''}));
-  pendingImp=[];save();$('#dlg').close();refresh(true);
-  const m=$('#msg');m.className='ok';m.textContent=`Đã nhập ${n} điểm.`;
-}
+/* ---------- Quản trị ---------- */
+function lockBtn(){if(PW)ask('Thoát chế độ quản trị?',()=>{PW=null;D=null;adm();pr();sync()},'Thoát');else login()}
+function login(){if(!API_URL)return toast('Chưa cấu hình máy chủ giá');openMd('<h2>🔒 Đăng nhập quản trị</h2><label>Mật khẩu</label><input id="pw" type="password" autocomplete="off"><button class="p" id="pgo">Đăng nhập</button><button class="p s" onclick="closeMd()">Hủy</button>');
+$('pgo').onclick=async()=>{const w=$('pw').value;if(!w)return;$('pgo').disabled=true;try{const j=await post({action:'check',pw:w});if(j.ok){PW=w;D=clone(P);closeMd();adm();pr();nt();toast('Đã vào chế độ quản trị')}else{toast('Sai mật khẩu');$('pgo').disabled=false}}catch(e){toast('Không kết nối được máy chủ');$('pgo').disabled=false}}}
+function adm(){$('lk').textContent=PW?'🔓 Đang quản trị':'🔒 Quản trị';
+$('ncomp').innerHTML=PW?'<div class="card"><div class="ct"><i>📢</i>Gửi thông báo mới</div><label>Tiêu đề</label><input id="ntt" maxlength="120"><label>Nội dung</label><textarea id="ntb" rows="4" maxlength="1500"></textarea><div class="row"><span>Bắt buộc người dùng xác nhận</span><label class="sw" style="margin:0"><input type="checkbox" id="ntr" checked><i></i></label></div><button class="p" id="nts">Gửi thông báo</button></div>':'';
+if(PW)$('nts').onclick=async()=>{const t=$('ntt').value.trim(),b=$('ntb').value.trim();if(!t||!b)return toast('Nhập tiêu đề và nội dung');$('nts').disabled=true;
+ try{const j=await post({action:'notice',pw:PW,title:t,body:b,req:$('ntr').checked});if(j.ok){(ACK=ACK||[]).push(j.nid);ls.set('acked',ACK);$('ntt').value='';$('ntb').value='';toast('Đã gửi thông báo');sync()}else toast(j.error||'Lỗi')}catch(e){toast('Không kết nối được máy chủ')}$('nts').disabled=false}}
+const NM={rt27:'Nối RT 27',rn27:'Nối RN 27',co27:'Co PVC 27',ong27:'Ống PVC D27 (m)',val27:'Val PVC 27',rt21:'Nối 21 RT 27',rn21:'Nối 21 RN 27',co21:'Co PVC 21',ong21:'Ống PVC D21 (m)',val21:'Val PVC 21',van:'Van góc DN15',keo:'Keo dán',cs:'Cao su non',htr:'Hoàn trả bê tông (m³)'};
+function diffs(){const c=[];for(const k in NM)if(D[k]!=P[k])c.push({n:NM[k],o:P[k],v:D[k]});for(const k in DEF.dai)if(D.dai[k]!=P.dai[k])c.push({n:'Đai khởi thủy '+k+'/27',o:P.dai[k],v:D.dai[k]});return c}
+function pr(){const ed=!!PW&&!!D,S=ed?D:P,dis=ed?'':'disabled';
+$('st').className='badge '+(ed?'warn':'');$('st').innerHTML=!API_URL?'Chưa kết nối máy chủ giá – đang dùng giá gốc.':(ed?'✏️ Chế độ quản trị – sửa giá xong bấm <b>Lưu &amp; thông báo</b>.':'🔒 Chỉ quản trị viên được sửa giá.<br>Nguồn: '+SRV.src+(SRV.ts?' · cập nhật '+SRV.ts:'')+(SRV.off?' · <b>đang không có mạng</b>':''));
+const fld=(lab,at,v,d)=>`<div class="${v!=d?'ch':''}"><label>${lab}</label><div class="iw"><input ${at} type="number" inputmode="decimal" value="${v}" ${dis}><em>đ</em></div></div>`;
+let h='<div class="sec">Vật tư chính</div><div class="g">';for(const k in NM)h+=fld(NM[k],`data-k="${k}"`,S[k],DEF[k]);
+h+='</div><div class="sec">Đai khởi thủy</div><div class="g">';for(const k in DEF.dai)h+=fld('Đai '+k+'/27',`data-d="${k}"`,S.dai[k],DEF.dai[k]);$('pr').innerHTML=h+'</div>';
+if(ed)$('pr').querySelectorAll('input').forEach(i=>i.oninput=()=>{const v=parseFloat(i.value)||0,k=i.dataset.k,d=i.dataset.d,df=k?DEF[k]:DEF.dai[d];if(k)D[k]=v;else D.dai[d]=v;i.parentNode.parentNode.className=v!=df?'ch':''});
+$('adm').innerHTML=ed?'<button class="p" id="bsave">💾 Lưu &amp; thông báo</button><button class="p s" id="brs">Đặt lại giá gốc (chưa lưu)</button>':'<button class="p s" id="bin">🔒 Đăng nhập quản trị để sửa giá</button>';
+if(ed){$('bsave').onclick=saveFlow;$('brs').onclick=()=>ask('Đặt toàn bộ giá về giá gốc (chưa lưu lên máy chủ)?',()=>{D=clone(DEF);pr()})}else $('bin').onclick=login}
+function saveFlow(){const c=diffs();if(!c.length)return toast('Chưa có thay đổi nào so với giá hiện tại');
+openMd(`<h2>💾 Lưu giá mới</h2><p>${c.length} mục thay đổi:</p>${chg({changes:c})}<div class="row"><span>Gửi thông báo cho người dùng</span><label class="sw" style="margin:0"><input type="checkbox" id="sn" checked><i></i></label></div><div id="snb"><label>Tiêu đề</label><input id="st1" value="Điều chỉnh đơn giá vật tư" maxlength="120"><label>Ghi chú (không bắt buộc)</label><textarea id="sbd" rows="3" maxlength="1500" placeholder="VD: Áp dụng từ ngày …"></textarea><div class="row"><span>Bắt buộc bấm xác nhận</span><label class="sw" style="margin:0"><input type="checkbox" id="sr" checked><i></i></label></div></div><button class="p" id="sgo">Lưu &amp; gửi</button><button class="p s" onclick="closeMd()">Hủy</button>`);
+$('sn').onchange=()=>$('snb').hidden=!$('sn').checked;
+$('sgo').onclick=async()=>{$('sgo').disabled=true;const notice=$('sn').checked?{title:$('st1').value.trim(),body:$('sbd').value.trim(),req:$('sr').checked,changes:c}:null;
+ try{const j=await post({action:'save',pw:PW,prices:D,notice:notice});if(j.ok){applyPrices(D);SRV={ts:j.updated,src:'máy chủ'};cache(D,j.updated);if(j.nid){(ACK=ACK||[]).push(j.nid);ls.set('acked',ACK)}D=clone(P);closeMd();toast(notice?'Đã lưu và gửi thông báo':'Đã lưu giá');pr();run();sync()}else{toast(j.error||'Lỗi khi lưu');$('sgo').disabled=false}}catch(e){toast('Không kết nối được máy chủ, chưa lưu');$('sgo').disabled=false}}}
 
-async function exportXlsx(){
-  const s=station(),m=$('#msg');
-  m.className='mu';m.textContent='Đang chuẩn bị file…';
-  try{await lib('excel')}catch(e){m.className='err';m.textContent='Chưa tải được thư viện xuất Excel. Kiểm tra mạng rồi thử lại.';return}
-  const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('DIỄN GIẢI',{pageSetup:{orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0}});
-  [8.3,25.3,18.1,22.7,24,20.4,19.7,22.3,16.4,15.9,23.1,16.6,12.3].forEach((w,i)=>ws.getColumn(i+1).width=w);
-  const B={style:'thin'},bd={top:B,left:B,bottom:B,right:B},TNR=(sz,b)=>({name:'Times New Roman',size:sz,bold:b});
-  ws.mergeCells('A4:M4');const t=ws.getCell('A4');
-  t.value=`BẢNG DIỄN GIẢI SƠ ĐỒ MẠNG ỐNG CẤP NƯỚC - HIỆN TRẠNG TỔNG KIỂM TRA \nNHÂN VIÊN QUẢN LÝ: ${s.manager.toUpperCase()}; MÃ TRẠM: ${s.code}\nĐỊA ĐIỂM: ${s.place.toUpperCase()}`;
-  t.font=TNR(13,true);t.alignment={horizontal:'center',vertical:'middle',wrapText:true};ws.getRow(4).height=60.75;
-  ['A6:A7','B6:B7','C6:C7','D6:D7','E6:E7','F6:G6','H6:J6','K6:M6'].forEach(r=>ws.mergeCells(r));
-  const H={A6:'Ký hiệu',B6:'Tên tại điểm ký hiệu',C6:'Mã KH',D6:'SĐT',E6:'Các cấp ống hiện hữu',F6:'Tọa độ Google Map',H6:'Trạm tiếp giáp',K6:'Tuyến ống tiếp nước',F7:'X',G7:'Y',H7:'Tên trạm',I7:'Mã trạm',J7:'Cấp ống',K7:'Tên trạm',L7:'Mã trạm',M7:'Cấp ống'};
-  for(let r=6;r<=7;r++)for(let c=1;c<=13;c++){const x=ws.getCell(r,c);x.border=bd;x.font=TNR(13,true);x.alignment={horizontal:'center',vertical:'middle',wrapText:true}}
-  Object.entries(H).forEach(([a,v])=>ws.getCell(a).value=v);ws.getRow(6).height=26.25;ws.getRow(7).height=39.75;
-  s.customers.forEach((c,i)=>{
-    const r=8+i,n=v=>v===''||v==null?null:(isNaN(Number(v))?v:Number(v));
-    const vals=[i+1,c.name,c.code,c.phone,n(c.pipe),c.lat,c.lng,c.adjName,c.adjCode,n(c.adjPipe),c.feedName,c.feedCode,n(c.feedPipe)];
-    vals.forEach((v,j)=>{const x=ws.getCell(r,j+1);x.value=v===''?null:v;x.border=bd;x.font=TNR(11,false);
-      x.alignment={horizontal:j===1?'left':'center',vertical:'middle'};if(j===5||j===6)x.numFmt='0.0000000'});
-    ws.getRow(r).height=15;
-  });
-  ws.mergeCells('K1:M3');const hb=ws.getCell('K1');
-  hb.value='Phụ lục A3\n(Đính kèm Quyết định số 92/QĐ-TTNS\nngày 09/02/2026)';
-  hb.font={name:'Times New Roman',size:9};hb.alignment={horizontal:'center',vertical:'top',wrapText:true};
-  for(let r=1;r<=3;r++){ws.getRow(r).height=15;for(let c=11;c<=13;c++)ws.getCell(r,c).border={top:r===1?B:undefined,bottom:r===3?B:undefined,left:c===11?B:undefined,right:c===13?B:undefined}}
-  const e=8+Math.max(s.customers.length,1)+1;
-  [['Cần Thơ, ngày......tháng......năm........',false,true],['NGƯỜI THỰC HIỆN',true,false],['(Ký, ghi rõ họ tên)',false,true]].forEach(([txt,b2,it],k)=>{
-    ws.mergeCells(e+k,11,e+k,13);const x=ws.getCell(e+k,11);x.value=txt;x.font={name:'Times New Roman',size:11,bold:b2,italic:it};x.alignment={horizontal:'center',vertical:'middle'}});
-  const w2=wb.addWorksheet('ĐO CHIỀU DÀI',{pageSetup:{orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0}});
-  [9.3,24,17,16.3,17.1,20.6,19.4,20].forEach((w,i)=>w2.getColumn(i+1).width=w);
-  const T11=(b2,it)=>({name:'Times New Roman',size:11,bold:!!b2,italic:!!it}),ctr={horizontal:'center',vertical:'middle',wrapText:true};
-  for(let r=1;r<=3;r++)w2.getRow(r).height=15;
-  w2.mergeCells('F1:H3');const hb2=w2.getCell('F1');
-  hb2.value='Phụ lục A3\n(Đính kèm Quyết định số 92/QĐ-TTNS\nngày 09/02/2026)';hb2.font={name:'Times New Roman',size:9};hb2.alignment={horizontal:'center',vertical:'top',wrapText:true};
-  for(let r=1;r<=3;r++)for(let c=6;c<=8;c++)w2.getCell(r,c).border={top:r===1?B:undefined,bottom:r===3?B:undefined,left:c===6?B:undefined,right:c===8?B:undefined};
-  w2.mergeCells('A4:H4');const t2=w2.getCell('A4');
-  t2.value=`BẢNG DIỄN GIẢI ĐOẠN ĐIỂM NÚT TRÊN SƠ ĐỒ MẠNG ỐNG CẤP NƯỚC - HIỆN TRẠNG TỔNG KIỂM TRA \nNHÂN VIÊN QUẢN LÝ: ${s.manager.toUpperCase()}; MÃ TRẠM: ${s.code}\nĐỊA ĐIỂM: ${s.place.toUpperCase()}`;
-  t2.font=T11(true);t2.alignment={horizontal:'center',vertical:'middle',wrapText:true};w2.getRow(4).height=51;
-  ['Stt','Đoạn điểm nút','Cấp ống (mm)','Chiều dài (m)','Số lượng\n khách hàng','Vị trí điểm thay đổi cấp ống','Loại thay đổi \ncấp ống','Ghi chú'].forEach((h,j)=>{const x=w2.getCell(5,j+1);x.value=h;x.font=T11(true);x.alignment=ctr;x.border=bd});
-  w2.getRow(5).height=28.5;
-  const secs=s.sections||[],nn=v=>v===''||v==null?null:(isNaN(Number(v))?v:Number(v));
-  secs.forEach((x,i)=>{
-    const r=6+i,pr=parseChanges(x.changes);
-    [i+1,x.chain,nn(x.pipe),nn(x.len),nn(x.cust),pr.pts.join('\n')||null,pr.types.join('\n')||null,x.note||null].forEach((v,j)=>{
-      const c=w2.getCell(r,j+1);c.value=v===''?null:v;c.font=T11();c.alignment=ctr;c.border=bd;if(j===1)c.numFmt='@'});
-    w2.getRow(r).height=Math.max(15,15*Math.max(pr.pts.length,pr.types.length,1));
-  });
-  const tr=6+Math.max(secs.length,1),pipes=new Set(secs.map(x=>String(x.pipe||'').trim()).filter(Boolean));
-  for(let c=1;c<=8;c++){const x=w2.getCell(tr,c);x.border=bd;x.font=T11(true);x.alignment=ctr}
-  w2.getCell(tr,1).value='Tổng';w2.getCell(tr,3).value=String(pipes.size).padStart(2,'0')+' CẤP ỐNG';
-  const sum=k2=>secs.reduce((a,x)=>a+(Number(x[k2])||0),0);
-  if(secs.length){w2.getCell(tr,4).value={formula:`SUM(D6:D${tr-1})`,result:sum('len')};w2.getCell(tr,5).value={formula:`SUM(E6:E${tr-1})`,result:sum('cust')}}
-  [['Cần Thơ, ngày......tháng......năm........',false,true],['NGƯỜI THỰC HIỆN',true,false],['(Ký, ghi rõ họ tên)',false,true]].forEach(([txt,b2,it],k2)=>{
-    w2.mergeCells(tr+1+k2,6,tr+1+k2,8);const x=w2.getCell(tr+1+k2,6);x.value=txt;x.font=T11(b2,it);x.alignment={horizontal:'center',vertical:'middle'}});
-  try{
-    const buf=await wb.xlsx.writeBuffer(),fn=`PHU_LUC_A3_${s.code}.xlsx`;
-    const dl=await (window.claude?.use?.('downloads')||null);
-    if(dl){await dl.save({filename:fn,data:buf})}
-    else{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf]));a.download=fn;a.click()}
-    m.className='ok';m.textContent='Đã tạo file '+fn;
-  }catch(e){m.className='err';m.textContent=e&&e.code==='declined'?'Bạn đã hủy lưu file.':'Không xuất được file: '+(e.message||e)}
-}
-
-/* ===== THÔNG BÁO & TIN NHẮN (quản trị: tuankiet) ===== */
-const ADMIN='tuankiet',isAdmin=()=>String(user||'').toLowerCase()===ADMIN;
-let msgs=[],lastId=0,seen={},chatOpen=false,chatKey=null,polling=false,lastPoll=0,chatFor=null;
-const mkey=()=>'ctl:msgs:'+user,skey=()=>'ctl:seen:'+user,ikey=()=>'ctl:minit:'+user;
-function chatInit(){
-  if(chatFor===user)return;chatFor=user;
-  try{msgs=JSON.parse(st.get(mkey())||'[]')}catch(e){msgs=[]}
-  try{seen=JSON.parse(st.get(skey())||'{}')}catch(e){seen={}}
-  lastId=msgs.reduce((a,m)=>Math.max(a,m.id),0);
-}
-function chatReset(){msgs=[];lastId=0;seen={};chatFor=null;chatOpen=false;chatKey=null;const c=$('#chat');if(c){c.hidden=true;c.innerHTML=''}document.documentElement.classList.remove('nsc');const b=$('#bdg');if(b)b.hidden=true}
-/* Quản trị: mỗi người dùng một cuộc trò chuyện + một mục "thông báo chung". Người dùng thường: một luồng duy nhất với quản trị. */
-const keyOf=m=>!isAdmin()?'main':(m.to==='*'?'*':(m.from===user?m.to:m.from));
-const fmtT=ts=>{const d=new Date(ts),n=new Date(),p=x=>String(x).padStart(2,'0');return (d.toDateString()===n.toDateString()?'':p(d.getDate())+'/'+p(d.getMonth()+1)+' ')+p(d.getHours())+':'+p(d.getMinutes())};
-function paintBadge(){
-  const b=$('#bdg');if(!b)return;if(user)chatInit();
-  const n=user?msgs.filter(m=>m.from!==user&&m.id>(seen[keyOf(m)]||0)).length:0;
-  b.hidden=!n;b.textContent=n>99?'99+':n;
-}
-function mergeMsgs(arr){
-  const have=new Set(msgs.map(m=>m.id)),add=arr.filter(m=>m&&!have.has(m.id));
-  if(!add.length)return [];
-  msgs=msgs.concat(add).sort((a,b)=>a.id-b.id).slice(-400);lastId=msgs[msgs.length-1].id;
-  st.set(mkey(),JSON.stringify(msgs));return add;
-}
-async function pollMsgs(){
-  if(!user||!token||polling)return;chatInit();polling=true;lastPoll=Date.now();
-  try{
-    const r=await api('msgList',{since:lastId},15000);
-    if(!r||!r.ok||!Array.isArray(r.msgs)||!user)return;
-    const first=!st.get(ikey()),add=mergeMsgs(r.msgs);st.set(ikey(),'1');
-    if(!add.length)return;
-    const inc=add.filter(m=>m.from!==user);
-    if(first){inc.forEach(m=>{const k=keyOf(m);seen[k]=Math.max(seen[k]||0,m.id)});st.set(skey(),JSON.stringify(seen))}
-    if(chatOpen){chatKey?drawMsgs():drawChat()}
-    paintBadge();
-    if(inc.length&&!first)notifyIn(inc);
-  }finally{polling=false}
-}
-function notifyIn(inc){
-  const m=inc[inc.length-1],t=(m.to==='*'?'📢 Thông báo: ':'💬 '+m.from+': ')+String(m.text).slice(0,80);
-  const vis=document.visibilityState==='visible';
-  if(vis&&chatOpen&&chatKey&&inc.every(x=>keyOf(x)===chatKey))return;
-  if(vis){toast(t,{label:'Mở',js:'openChat()'});clearTimeout(toast.t);toast.t=setTimeout(()=>{$('#toast').hidden=true},7000);if(navigator.vibrate)navigator.vibrate(120)}
-  else if(window.Notification&&Notification.permission==='granted'&&swReg){try{swReg.showNotification('Tọa độ KH',{body:t,icon:'icon-192.png',tag:'ctl-msg'})}catch(e){}}
-}
-function openChat(k){
-  if(!user)return;chatInit();chatOpen=true;chatKey=isAdmin()?(k||null):'main';
-  $('#chat').hidden=false;document.documentElement.classList.add('nsc');history.pushState({chat:1},'');
-  drawChat();pollMsgs();
-}
-function closeChat(fromPop){
-  if(!chatOpen)return;chatOpen=false;chatKey=null;const c=$('#chat');c.hidden=true;c.innerHTML='';
-  if(!fsOn)document.documentElement.classList.remove('nsc');
-  if(!fromPop&&history.state&&history.state.chat)history.back();
-  paintBadge();
-}
-addEventListener('popstate',()=>{if(chatOpen)closeChat(true)});
-function openThread(k){chatKey=k||null;drawChat();if(k){const t=$('#cin');if(t&&!/Mobi|Android/i.test(navigator.userAgent))t.focus()}}
-function newThread(){const u=($('#cnew').value||'').trim().toLowerCase();if(!u||u===ADMIN)return;openThread(u)}
-function askNotif(){try{Notification.requestPermission().then(()=>drawChat())}catch(e){}}
-function drawChat(){
-  const c=$('#chat');if(!c||!chatOpen)return;const ad=isAdmin();
-  if(ad&&!chatKey){
-    const keep=$('#cnew')?$('#cnew').value:'',th=new Map();
-    msgs.forEach(m=>th.set(keyOf(m),m));
-    const rows=[...th.entries()].sort((a,b)=>b[1].id-a[1].id).map(([k,m])=>{
-      const n=msgs.filter(x=>x.from!==user&&keyOf(x)===k&&x.id>(seen[k]||0)).length;
-      return `<div class="th" data-k="${esc(k)}"><div class="mn"><b>${k==='*'?'📢 Thông báo chung':esc(k)}</b><div class="mu">${m.from===user?'Bạn: ':''}${esc(String(m.text).slice(0,80))}</div></div><span class="mu">${fmtT(m.ts)}</span>${n?`<i class="nb">${n}</i>`:''}</div>`}).join('');
-    c.innerHTML=`<div class="ch"><button onclick="closeChat()" aria-label="Đóng">←</button><b>Tin nhắn &amp; thông báo</b></div>
-    <div id="cmsgs"><button class="p" style="width:100%;margin-bottom:10px" onclick="openThread('*')">📢 Gửi thông báo cho tất cả người dùng</button>
-    <div class="row" style="margin-bottom:12px"><input id="cnew" class="sp" placeholder="Nhắn riêng: nhập tên đăng nhập" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc(keep)}" onkeydown="if(event.key==='Enter')newThread()"><button onclick="newThread()">Nhắn</button></div>
-    ${rows||'<p class="mu">Chưa có tin nhắn nào.</p>'}</div>`;
-    c.querySelectorAll('.th').forEach(e=>e.onclick=()=>openThread(e.dataset.k));
-    return;
-  }
-  const title=!ad?'Thông báo &amp; tin nhắn':(chatKey==='*'?'📢 Thông báo cho tất cả':esc(chatKey));
-  const bell=window.Notification&&Notification.permission==='default'?'<button onclick="askNotif()" title="Bật thông báo" aria-label="Bật thông báo">🔔</button>':'';
-  c.innerHTML=`<div class="ch"><button onclick="${ad?'openThread(null)':'closeChat()'}" aria-label="Quay lại">←</button><b>${title}</b>${bell}</div><div id="cmsgs"></div>
-  <div class="cc"><textarea id="cin" rows="1" placeholder="${ad?(chatKey==='*'?'Nội dung thông báo gửi tất cả người dùng':'Nhập tin nhắn…'):'Nhắn cho quản trị…'}" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')chatSend()"></textarea><button class="p" id="csend" onclick="chatSend()">Gửi</button></div>`;
-  drawMsgs(true);
-}
-function drawMsgs(toEnd){
-  const box=$('#cmsgs');if(!box||!chatKey)return;
-  const near=box.scrollHeight-box.scrollTop-box.clientHeight<80,L=msgs.filter(m=>keyOf(m)===chatKey);
-  box.innerHTML=L.map(m=>{const me=m.from===user,nt=m.to==='*';
-    return `<div class="bb${me?' me':''}${nt?' nt':''}"><div class="by">${nt?'📢 Thông báo · ':''}${me?'Bạn':esc(m.from)} · ${fmtT(m.ts)}</div><div class="tx">${esc(m.text)}</div></div>`}).join('')
-    ||`<p class="mu">${isAdmin()?'Chưa có tin nhắn. Nhập nội dung bên dưới để gửi.':'Chưa có thông báo nào. Bạn có thể nhắn cho quản trị ở ô bên dưới.'}</p>`;
-  if(toEnd||near)box.scrollTop=box.scrollHeight;
-  if(L.length){seen[chatKey]=Math.max(seen[chatKey]||0,L[L.length-1].id);st.set(skey(),JSON.stringify(seen))}
-  paintBadge();
-}
-async function chatSend(){
-  const ta=$('#cin'),b=$('#csend');if(!ta||!chatKey)return;const text=ta.value.trim();if(!text)return;
-  const to=isAdmin()?chatKey:ADMIN;
-  if(isAdmin()&&to==='*'&&!confirm('Gửi thông báo này cho TẤT CẢ người dùng?'))return;
-  b.disabled=true;b.textContent='Đang gửi…';
-  const r=await api('msgSend',{to,text},20000);
-  b.disabled=false;b.textContent='Gửi';
-  if(!r||!r.ok||!r.msg){toast((r&&r.error)||'Chưa gửi được, thử lại.');return}
-  ta.value='';mergeMsgs([r.msg]);drawMsgs(true);
-}
-setInterval(()=>{if(document.visibilityState==='visible'&&user&&Date.now()-lastPoll>(chatOpen?4500:30000))pollMsgs()},4000);
-
-/* ===== KHỞI ĐỘNG: hiện giao diện ngay từ dữ liệu trên máy, đồng bộ ở nền ===== */
-let swReg=null;
-if('serviceWorker' in navigator){
-  let had=!!navigator.serviceWorker.controller;
-  navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    if(!had){had=true;return}
-    if(!isDirty()&&!$('#dlg').open&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))location.reload();
-    else toast('Có bản cập nhật mới, hãy mở lại ứng dụng.');
-  });
-  navigator.serviceWorker.addEventListener('message',e=>{
-    if(e.data&&e.data.type==='updated')toast('Có bản cập nhật mới.',{label:'Tải lại',js:'location.reload()'});
-  });
-  navigator.serviceWorker.register('sw.js').then(r=>{swReg=r}).catch(()=>{});
-}
-(function boot(){
-  if(user&&token){
-    let c=null;try{c=JSON.parse(st.get(localKey())||'null')}catch(e){}
-    loaded=!!(c&&c.stations);data=loaded?c:{stations:[]};dataVer++;
-    render();sync();prewarm();
-  }else{user=null;render();prewarm()}
-})();
-/* Quay lại app / có mạng lại / dữ liệu chờ gửi -> tự đồng bộ */
-document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible'){
-    if(user&&Date.now()-lastSync>30000)sync();
-    if(swReg)swReg.update().catch(()=>{});
-  }else if(isDirty())push();
-});
-addEventListener('online',()=>sync());
-setInterval(()=>{if(document.visibilityState==='visible'&&user&&!syncing&&(isDirty()||Date.now()-lastSync>120000))sync()},30000);
-/* Kéo màn hình xuống để làm mới (không áp dụng trên bản đồ và hộp thoại) */
-(function(){
-  const el=$('#ptr');let y0=0,on=false,d=0;
-  const skip=t=>t.closest&&t.closest('#mapwrap,#chat,dialog');
-  const hide=()=>{el.style.transform='translate(-50%,-150%)';el.style.opacity=0};
-  addEventListener('touchstart',e=>{on=false;if(!user||scrollY>0||e.touches.length!==1||skip(e.target))return;y0=e.touches[0].clientY;on=true;d=0},{passive:true});
-  addEventListener('touchmove',e=>{
-    if(!on)return;d=e.touches[0].clientY-y0;
-    if(d<=10||scrollY>0){hide();return}
-    el.textContent=d>140?'↑ Thả để làm mới':'↓ Kéo để làm mới';
-    el.style.opacity=1;el.style.transform=`translate(-50%,${Math.min(d/3,50)}px)`;
-  },{passive:true});
-  addEventListener('touchend',()=>{if(!on)return;on=false;hide();if(d>140)sync(true)});
-  addEventListener('touchcancel',()=>{on=false;hide()});
-})();
-</script>
-</body>
-</html>
+/* ---------- Tính tiền ---------- */
+const norm=s=>s.toLowerCase().trim().replace(/\s+/g,' ').replace(/^(ấp|khu vực) /,'');
+$('lx').innerHTML=RG.map(r=>`<option value="${r[0]}">`).join('');
+$('dkt').innerHTML=Object.keys(DEF.dai).map(k=>`<option ${k==90?'selected':''}>${k}</option>`).join('');
+function xa(){const v=$('xa').value.trim().toLowerCase();return RG.find(r=>r[0].toLowerCase()==v||r[1].toLowerCase()==v)}
+$('seg').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('kind').value=b.dataset.v;[...$('seg').children].forEach(x=>x.className=x==b?'on':'');run()};
+function run(){
+const x=xa(),b=$('dbkk'),vb=$('vung');$('tew').hidden=$('kind').value!='Lắp mới Tê';
+$('la').innerHTML=x&&AP[x[0]]?AP[x[0]].map(a=>`<option value="${a[0]}">`).join(''):'';
+if(!x){vb.textContent='Thuộc vùng: — (chọn xã, phường trong danh sách)';vb.className='badge warn';b.textContent='—';b.className='badge';$('thu').textContent='—';$('sub').textContent='';$('det').innerHTML='';return}
+vb.textContent='Thuộc vùng: '+x[2];vb.className='badge ok';
+const l=AP[x[0]],a=norm($('ap').value);
+if(!$('ap').value.trim()){b.textContent='Chưa nhập ấp';b.className='badge'}
+else if(!l){b.textContent='Không thuộc vùng đặc biệt khó khăn (xã, phường này không có ấp trong danh sách)';b.className='badge'}
+else{const h=l.find(e=>norm(e[0])==a);
+ if(!h){b.textContent='Không có trong danh sách → không thuộc vùng đặc biệt khó khăn (kiểm tra lại tên ấp)';b.className='badge warn'}
+ else if(h[1]){b.textContent='✔ '+h[0]+': THUỘC vùng đặc biệt khó khăn';b.className='badge red'}
+ else{b.textContent=h[0]+': thuộc vùng đồng bào DTTS, KHÔNG thuộc đặc biệt khó khăn';b.className='badge ok'}}
+const n=id=>Math.max(0,parseFloat($(id).value)||0);
+const r=calc({vung:x[2],kind:$('kind').value,ngheo:$('ngheo').checked,dkt:$('dkt').value,ong:$('ong').value,len:n('len'),co:n('co'),pha:n('pha'),htr:n('htr'),dao:n('dao'),sau:n('sau')},P);
+$('thu').textContent=f(r.thu)+' đ';$('lbl').textContent='Chi phí phải thu – '+($('ngheo').checked?'Hộ cận nghèo (50%)':'Hộ thông thường');
+$('sub').textContent='Tổng dự toán làm tròn: '+f(r.G3)+' đ';
+$('det').innerHTML='<table><tr><th>Hạng mục</th><th>SL</th><th>Vật tư</th><th>Nhân công</th></tr>'+r.R.map(e=>`<tr><td>${e.n}</td><td>${+e.sl.toFixed(3)}</td><td>${f(e.a)}</td><td>${f(e.b)}</td></tr>`).join('')+
+`<tr><th>A, B</th><th></th><th>${f(r.A)}</th><th>${f(r.B)}</th></tr></table><table><tr><td>Chi phí trực tiếp (A+B)</td><td>${f(r.T)}</td></tr><tr><td>Chi phí gián tiếp (7,5%)</td><td>${f(r.GT)}</td></tr><tr><td>Thu nhập chịu thuế tính trước</td><td>${f(r.TL)}</td></tr><tr><td>Chi phí khảo sát (5,8%)</td><td>${f(r.GKS)}</td></tr><tr><td>Thuế GTGT (8%)</td><td>${f(r.VAT)}</td></tr><tr><th>Tổng dự toán</th><th>${f(r.G)}</th></tr></table>`}
+document.querySelectorAll('#p1 input,#p1 select').forEach(e=>{e.oninput=run;e.onchange=run});
+{const mv=ls.get('minv',null);if(mv&&vlt(VER,mv))blockApp(mv)}
+adm();pr();run();nt();sync();gate();
+addEventListener('online',sync);document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});setInterval(()=>{if(!document.hidden)sync()},60000);
+</script></body></html>
