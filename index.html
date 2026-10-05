@@ -141,17 +141,23 @@ function toggleReg(e){
   $('#rcw').hidden=!reg;
   $('#tg').textContent=reg?'Đã có tài khoản? Đăng nhập':'Chưa có tài khoản? Tạo mới';
 }
+let warmed=0;
+function warm(){if(Date.now()-warmed<60000)return;warmed=Date.now();fetch(API,{method:'POST',body:JSON.stringify({action:'ping'})}).catch(()=>{})}
 async function doLogin(){
   const u=$('#u').value.trim().toLowerCase(),p=$('#p').value,b=$('#lb'),m=$('#msg');
   if(!u||p.length<6){m.className='err';m.textContent='Nhập tên đăng nhập và mật khẩu (tối thiểu 6 ký tự).';return}
-  b.disabled=true;m.className='mu';m.textContent='Đang xử lý…';
+  b.disabled=true;m.className='mu';
+  const t0=Date.now(),tick=()=>{const n=Math.round((Date.now()-t0)/1000);m.textContent='Đang xử lý… '+n+' giây'+(n>=4?' (máy chủ Google đang khởi động, vui lòng chờ)':'')};tick();const iv=setInterval(tick,1000);
   const r=await api(reg?'register':'login',{username:u,password:p,regCode:reg?$('#rc').value.trim():''},40000);
-  b.disabled=false;
+  clearInterval(iv);b.disabled=false;
   if(!r.ok){m.className='err';m.textContent=r.error;return}
   user=r.username;token=r.token;persist(user,token);
   /* Vào app ngay bằng dữ liệu đã lưu trên máy, tải bản mới ở nền */
   let c=null;try{c=JSON.parse(st.get(localKey())||'null')}catch(e){}
-  loaded=!!(c&&c.stations);data=loaded?c:{stations:[]};dataVer++;view={name:'stations'};render();sync();
+  loaded=!!(c&&c.stations);data=loaded?c:{stations:[]};dataVer++;view={name:'stations'};
+  /* Máy chủ trả luôn dữ liệu cùng lúc đăng nhập: dùng ngay, khỏi gọi thêm một lượt tải (trừ khi máy còn thay đổi chưa gửi) */
+  if(r.data&&r.data.stations&&!isDirty()){loaded=true;data=r.data;st.set(localKey(),JSON.stringify(data));lastSync=Date.now();render();setStatus('ok');prewarm();return}
+  render();sync();
 }
 async function logout(){
   if(isDirty()){const ok=await push();if(!ok&&!confirm('Còn dữ liệu chưa đồng bộ lên máy chủ. Vẫn đăng xuất? (Dữ liệu vẫn được giữ trên máy và sẽ gửi lên khi bạn đăng nhập lại.)'))return}
@@ -206,6 +212,7 @@ function renderLogin(){
   <p class="mu"><a href="#" onclick="toggleReg(event)" id="tg">Chưa có tài khoản? Tạo mới</a></p>
   <p class="mu">Đăng nhập một lần, lần sau mở app là vào thẳng. Dữ liệu lưu trên máy chủ Google theo từng tài khoản.</p></div>`;
   if(!$('#u').value)$('#u').focus();else $('#p').focus();
+  warm();
 }
 
 function renderStations(){
