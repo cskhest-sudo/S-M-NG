@@ -17,7 +17,9 @@
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 Arial,Helvetica,sans-serif}
 header{background:var(--pr);color:var(--prt);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-header h1{font-size:17px;margin:0;flex:1}
+header h1{font-size:17px;margin:0;flex:1 1 100%}
+header button{padding:6px 10px}
+@media (min-width:700px){header h1{flex:1 1 auto}#hd{flex:0 0 auto!important}}
 main{max-width:1000px;margin:0 auto;padding:14px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px}
 button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 12px;border-radius:8px;cursor:pointer}
@@ -43,13 +45,13 @@ header{position:sticky;top:0;z-index:10}
 header .sp2{flex:1}
 button{touch-action:manipulation;transition:opacity .12s}button:active{opacity:.65}button:disabled{opacity:.55;cursor:default}
 button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
-#hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1 1 100%}#hd #sy{margin-right:auto}
 #sy{font-size:12px;opacity:.95;white-space:nowrap;cursor:pointer}#sy.off{font-weight:bold}
 .spin{display:inline-block;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
 [hidden]{display:none!important}
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 14px;border-radius:10px;z-index:50;font-size:14px;max-width:92vw;display:flex;gap:10px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 #toast button{background:transparent;color:inherit;border-color:currentColor;padding:4px 10px}
-#ptr{position:fixed;top:56px;left:50%;transform:translate(-50%,-70px);transition:transform .15s;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:20px;padding:6px 14px;font-size:13px;z-index:40;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#ptr{position:fixed;top:8px;left:50%;transform:translate(-50%,-150%);opacity:0;transition:transform .15s,opacity .15s;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:20px;padding:6px 14px;font-size:13px;z-index:40;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 @media (prefers-reduced-motion:reduce){.spin{animation:none}#ptr{transition:none}}
 </style>
 </head>
@@ -697,13 +699,13 @@ setInterval(()=>{if(document.visibilityState==='visible'&&user&&!syncing&&(isDir
 (function(){
   const el=$('#ptr');let y0=0,on=false,d=0;
   const skip=t=>t.closest&&t.closest('#lmap,dialog');
-  const hide=()=>{el.style.transform='translate(-50%,-70px)'};
+  const hide=()=>{el.style.transform='translate(-50%,-150%)';el.style.opacity=0};
   addEventListener('touchstart',e=>{on=false;if(!user||scrollY>0||e.touches.length!==1||skip(e.target))return;y0=e.touches[0].clientY;on=true;d=0},{passive:true});
   addEventListener('touchmove',e=>{
     if(!on)return;d=e.touches[0].clientY-y0;
     if(d<=10||scrollY>0){hide();return}
     el.textContent=d>140?'↑ Thả để làm mới':'↓ Kéo để làm mới';
-    el.style.transform=`translate(-50%,${Math.min(d/2.5,60)-30}px)`;
+    el.style.opacity=1;el.style.transform=`translate(-50%,${Math.min(d/3,50)}px)`;
   },{passive:true});
   addEventListener('touchend',()=>{if(!on)return;on=false;hide();if(d>140)sync(true)});
   addEventListener('touchcancel',()=>{on=false;hide()});
