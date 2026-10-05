@@ -1,9 +1,9 @@
-// Service worker v4 — mở app tức thì từ bộ nhớ, cập nhật ngầm.
+// Service worker v5 — mở app tức thì từ bộ nhớ, cập nhật ngầm.
 // - Giao diện (index.html, icon...): trả ngay bản đã lưu, tải bản mới ở nền (stale-while-revalidate).
 // - Thư viện cdnjs (Leaflet, ExcelJS): lưu lại, lần sau không cần mạng.
 // - Ô bản đồ: lưu tối đa 400 ô để xem lại nhanh.
 // - Không đụng tới Google Apps Script (đăng nhập, lưu dữ liệu đi thẳng ra mạng).
-const V = 'ctl-v4', LIBS = 'ctl-libs-v1', TILES = 'ctl-tiles-v1', MAX_TILES = 400;
+const V = 'ctl-v5', LIBS = 'ctl-libs-v1', TILES = 'ctl-tiles-v1', MAX_TILES = 400;
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 const TILE_HOSTS = ['tile.openstreetmap.org', 'server.arcgisonline.com', 'api.mapbox.com'];
 

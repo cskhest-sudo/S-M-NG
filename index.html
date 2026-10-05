@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Tọa độ khách hàng - Trạm tổng kiểm tra</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b6fb8">
@@ -98,12 +98,30 @@ html.nsc,html.nsc body{overflow:hidden;overscroll-behavior:none}
 #toast{z-index:3000}.card:empty{display:none}
 .ico{flex:0 0 40px;width:40px;height:40px;min-height:40px;padding:0;border-radius:50%}
 #gmb{gap:8px}
+/* ===== Tin nhắn ===== */
+.chb{position:relative}
+.chb i,.nb{background:#e53935;color:#fff;border-radius:10px;min-width:18px;height:18px;font:700 11px/18px Arial;text-align:center;padding:0 5px;font-style:normal}
+.chb i{position:absolute;top:-7px;right:-7px}.nb{font-size:12px;line-height:20px;height:20px}
+#chat{position:fixed;inset:0;z-index:1500;background:var(--bg);display:flex;flex-direction:column}
+.ch{display:flex;align-items:center;gap:8px;background:var(--pr);color:var(--prt);padding:8px 10px calc(8px);padding-top:calc(8px + env(safe-area-inset-top,0px));min-height:52px}
+.ch b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}
+.ch button{background:transparent;color:var(--prt);border-color:var(--prt);min-height:36px;padding:4px 12px}
+#cmsgs{flex:1;overflow-y:auto;padding:10px;overscroll-behavior:contain}
+.bb{max-width:85%;width:fit-content;background:var(--card);border:1px solid var(--bd);border-radius:14px 14px 14px 4px;padding:8px 12px;margin:0 0 8px}
+.bb.me{margin-left:auto;background:var(--pr);color:var(--prt);border-color:var(--pr);border-radius:14px 14px 4px 14px}
+.bb.nt{border-left:4px solid #f5a100}
+.bb .by{font-size:12px;opacity:.75}.bb .tx{white-space:pre-wrap;word-break:break-word}
+.cc{display:flex;gap:8px;align-items:flex-end;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--bd);background:var(--card)}
+.cc textarea{flex:1;min-height:44px;max-height:120px;resize:none;font:inherit;font-size:16px;padding:10px;border:1px solid var(--bd);border-radius:12px;background:var(--bg);color:var(--tx)}
+.th{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
+.th .mn{flex:1;min-width:0}.th .mn .mu{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
 <body>
 <header><h1 id="ttl">📍 Tọa độ khách hàng</h1><span id="hd"></span></header>
 <main id="app"></main>
 <dialog id="dlg"></dialog>
+<div id="chat" hidden></div>
 <div id="toast" hidden></div><div id="ptr" aria-hidden="true">↓ Kéo để làm mới</div>
 <script>
 const $=s=>document.querySelector(s);
@@ -158,7 +176,7 @@ async function doPush(){
 /* Đồng bộ nền: đẩy thay đổi chưa gửi, rồi tải bản mới. Không chặn giao diện. */
 async function sync(manual){
   if(!user||!token||syncing)return;
-  syncing=true;setStatus('sync');
+  pollMsgs();syncing=true;setStatus('sync');
   try{
     if(isDirty()){const ok=await push();if(!ok)return;setStatus('sync')}
     const v=dataVer,r=await api('load');
@@ -209,7 +227,7 @@ async function logout(){
   api('logout');forceLogout();
 }
 function forceLogout(m){
-  user=null;token=null;persist(null);data={stations:[]};loaded=false;dataVer++;sstate='';
+  chatReset();user=null;token=null;persist(null);data={stations:[]};loaded=false;dataVer++;sstate='';
   const d=$('#dlg');if(d&&d.open)d.close();
   view={name:'stations'};render();
   if(m&&$('#msg')){$('#msg').className='err';$('#msg').textContent=m}
@@ -234,8 +252,8 @@ function render(){
   view.name==='station'&&station()?renderStation():renderStations();
 }
 function renderHd(){
-  $('#hd').innerHTML=user?`<span id="sy" onclick="sync(true)"></span><span class="un">👤 ${esc(user)}</span><button onclick="sync(true)" title="Làm mới dữ liệu" aria-label="Làm mới dữ liệu">⟳</button><button onclick="logout()">Thoát</button>`:'';
-  paintStatus();
+  $('#hd').innerHTML=user?`<span id="sy" onclick="sync(true)"></span><span class="un">👤 ${esc(user)}</span><button class="chb" onclick="openChat()" aria-label="Tin nhắn và thông báo">💬<i id="bdg" hidden></i></button><button onclick="sync(true)" title="Làm mới dữ liệu" aria-label="Làm mới dữ liệu">⟳</button><button onclick="logout()">Thoát</button>`:'';
+  paintStatus();paintBadge();
 }
 function refresh(fit){
   if(view.name==='station'&&station()){
@@ -819,6 +837,110 @@ async function exportXlsx(){
   }catch(e){m.className='err';m.textContent=e&&e.code==='declined'?'Bạn đã hủy lưu file.':'Không xuất được file: '+(e.message||e)}
 }
 
+/* ===== THÔNG BÁO & TIN NHẮN (quản trị: tuankiet) ===== */
+const ADMIN='tuankiet',isAdmin=()=>String(user||'').toLowerCase()===ADMIN;
+let msgs=[],lastId=0,seen={},chatOpen=false,chatKey=null,polling=false,lastPoll=0,chatFor=null;
+const mkey=()=>'ctl:msgs:'+user,skey=()=>'ctl:seen:'+user,ikey=()=>'ctl:minit:'+user;
+function chatInit(){
+  if(chatFor===user)return;chatFor=user;
+  try{msgs=JSON.parse(st.get(mkey())||'[]')}catch(e){msgs=[]}
+  try{seen=JSON.parse(st.get(skey())||'{}')}catch(e){seen={}}
+  lastId=msgs.reduce((a,m)=>Math.max(a,m.id),0);
+}
+function chatReset(){msgs=[];lastId=0;seen={};chatFor=null;chatOpen=false;chatKey=null;const c=$('#chat');if(c){c.hidden=true;c.innerHTML=''}document.documentElement.classList.remove('nsc');const b=$('#bdg');if(b)b.hidden=true}
+/* Quản trị: mỗi người dùng một cuộc trò chuyện + một mục "thông báo chung". Người dùng thường: một luồng duy nhất với quản trị. */
+const keyOf=m=>!isAdmin()?'main':(m.to==='*'?'*':(m.from===user?m.to:m.from));
+const fmtT=ts=>{const d=new Date(ts),n=new Date(),p=x=>String(x).padStart(2,'0');return (d.toDateString()===n.toDateString()?'':p(d.getDate())+'/'+p(d.getMonth()+1)+' ')+p(d.getHours())+':'+p(d.getMinutes())};
+function paintBadge(){
+  const b=$('#bdg');if(!b)return;if(user)chatInit();
+  const n=user?msgs.filter(m=>m.from!==user&&m.id>(seen[keyOf(m)]||0)).length:0;
+  b.hidden=!n;b.textContent=n>99?'99+':n;
+}
+function mergeMsgs(arr){
+  const have=new Set(msgs.map(m=>m.id)),add=arr.filter(m=>m&&!have.has(m.id));
+  if(!add.length)return [];
+  msgs=msgs.concat(add).sort((a,b)=>a.id-b.id).slice(-400);lastId=msgs[msgs.length-1].id;
+  st.set(mkey(),JSON.stringify(msgs));return add;
+}
+async function pollMsgs(){
+  if(!user||!token||polling)return;chatInit();polling=true;lastPoll=Date.now();
+  try{
+    const r=await api('msgList',{since:lastId},15000);
+    if(!r||!r.ok||!Array.isArray(r.msgs)||!user)return;
+    const first=!st.get(ikey()),add=mergeMsgs(r.msgs);st.set(ikey(),'1');
+    if(!add.length)return;
+    const inc=add.filter(m=>m.from!==user);
+    if(first){inc.forEach(m=>{const k=keyOf(m);seen[k]=Math.max(seen[k]||0,m.id)});st.set(skey(),JSON.stringify(seen))}
+    if(chatOpen){chatKey?drawMsgs():drawChat()}
+    paintBadge();
+    if(inc.length&&!first)notifyIn(inc);
+  }finally{polling=false}
+}
+function notifyIn(inc){
+  const m=inc[inc.length-1],t=(m.to==='*'?'📢 Thông báo: ':'💬 '+m.from+': ')+String(m.text).slice(0,80);
+  const vis=document.visibilityState==='visible';
+  if(vis&&chatOpen&&chatKey&&inc.every(x=>keyOf(x)===chatKey))return;
+  if(vis){toast(t,{label:'Mở',js:'openChat()'});clearTimeout(toast.t);toast.t=setTimeout(()=>{$('#toast').hidden=true},7000);if(navigator.vibrate)navigator.vibrate(120)}
+  else if(window.Notification&&Notification.permission==='granted'&&swReg){try{swReg.showNotification('Tọa độ KH',{body:t,icon:'icon-192.png',tag:'ctl-msg'})}catch(e){}}
+}
+function openChat(k){
+  if(!user)return;chatInit();chatOpen=true;chatKey=isAdmin()?(k||null):'main';
+  $('#chat').hidden=false;document.documentElement.classList.add('nsc');history.pushState({chat:1},'');
+  drawChat();pollMsgs();
+}
+function closeChat(fromPop){
+  if(!chatOpen)return;chatOpen=false;chatKey=null;const c=$('#chat');c.hidden=true;c.innerHTML='';
+  if(!fsOn)document.documentElement.classList.remove('nsc');
+  if(!fromPop&&history.state&&history.state.chat)history.back();
+  paintBadge();
+}
+addEventListener('popstate',()=>{if(chatOpen)closeChat(true)});
+function openThread(k){chatKey=k||null;drawChat();if(k){const t=$('#cin');if(t&&!/Mobi|Android/i.test(navigator.userAgent))t.focus()}}
+function newThread(){const u=($('#cnew').value||'').trim().toLowerCase();if(!u||u===ADMIN)return;openThread(u)}
+function askNotif(){try{Notification.requestPermission().then(()=>drawChat())}catch(e){}}
+function drawChat(){
+  const c=$('#chat');if(!c||!chatOpen)return;const ad=isAdmin();
+  if(ad&&!chatKey){
+    const keep=$('#cnew')?$('#cnew').value:'',th=new Map();
+    msgs.forEach(m=>th.set(keyOf(m),m));
+    const rows=[...th.entries()].sort((a,b)=>b[1].id-a[1].id).map(([k,m])=>{
+      const n=msgs.filter(x=>x.from!==user&&keyOf(x)===k&&x.id>(seen[k]||0)).length;
+      return `<div class="th" data-k="${esc(k)}"><div class="mn"><b>${k==='*'?'📢 Thông báo chung':esc(k)}</b><div class="mu">${m.from===user?'Bạn: ':''}${esc(String(m.text).slice(0,80))}</div></div><span class="mu">${fmtT(m.ts)}</span>${n?`<i class="nb">${n}</i>`:''}</div>`}).join('');
+    c.innerHTML=`<div class="ch"><button onclick="closeChat()" aria-label="Đóng">←</button><b>Tin nhắn &amp; thông báo</b></div>
+    <div id="cmsgs"><button class="p" style="width:100%;margin-bottom:10px" onclick="openThread('*')">📢 Gửi thông báo cho tất cả người dùng</button>
+    <div class="row" style="margin-bottom:12px"><input id="cnew" class="sp" placeholder="Nhắn riêng: nhập tên đăng nhập" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc(keep)}" onkeydown="if(event.key==='Enter')newThread()"><button onclick="newThread()">Nhắn</button></div>
+    ${rows||'<p class="mu">Chưa có tin nhắn nào.</p>'}</div>`;
+    c.querySelectorAll('.th').forEach(e=>e.onclick=()=>openThread(e.dataset.k));
+    return;
+  }
+  const title=!ad?'Thông báo &amp; tin nhắn':(chatKey==='*'?'📢 Thông báo cho tất cả':esc(chatKey));
+  const bell=window.Notification&&Notification.permission==='default'?'<button onclick="askNotif()" title="Bật thông báo" aria-label="Bật thông báo">🔔</button>':'';
+  c.innerHTML=`<div class="ch"><button onclick="${ad?'openThread(null)':'closeChat()'}" aria-label="Quay lại">←</button><b>${title}</b>${bell}</div><div id="cmsgs"></div>
+  <div class="cc"><textarea id="cin" rows="1" placeholder="${ad?(chatKey==='*'?'Nội dung thông báo gửi tất cả người dùng':'Nhập tin nhắn…'):'Nhắn cho quản trị…'}" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')chatSend()"></textarea><button class="p" id="csend" onclick="chatSend()">Gửi</button></div>`;
+  drawMsgs(true);
+}
+function drawMsgs(toEnd){
+  const box=$('#cmsgs');if(!box||!chatKey)return;
+  const near=box.scrollHeight-box.scrollTop-box.clientHeight<80,L=msgs.filter(m=>keyOf(m)===chatKey);
+  box.innerHTML=L.map(m=>{const me=m.from===user,nt=m.to==='*';
+    return `<div class="bb${me?' me':''}${nt?' nt':''}"><div class="by">${nt?'📢 Thông báo · ':''}${me?'Bạn':esc(m.from)} · ${fmtT(m.ts)}</div><div class="tx">${esc(m.text)}</div></div>`}).join('')
+    ||`<p class="mu">${isAdmin()?'Chưa có tin nhắn. Nhập nội dung bên dưới để gửi.':'Chưa có thông báo nào. Bạn có thể nhắn cho quản trị ở ô bên dưới.'}</p>`;
+  if(toEnd||near)box.scrollTop=box.scrollHeight;
+  if(L.length){seen[chatKey]=Math.max(seen[chatKey]||0,L[L.length-1].id);st.set(skey(),JSON.stringify(seen))}
+  paintBadge();
+}
+async function chatSend(){
+  const ta=$('#cin'),b=$('#csend');if(!ta||!chatKey)return;const text=ta.value.trim();if(!text)return;
+  const to=isAdmin()?chatKey:ADMIN;
+  if(isAdmin()&&to==='*'&&!confirm('Gửi thông báo này cho TẤT CẢ người dùng?'))return;
+  b.disabled=true;b.textContent='Đang gửi…';
+  const r=await api('msgSend',{to,text},20000);
+  b.disabled=false;b.textContent='Gửi';
+  if(!r||!r.ok||!r.msg){toast((r&&r.error)||'Chưa gửi được, thử lại.');return}
+  ta.value='';mergeMsgs([r.msg]);drawMsgs(true);
+}
+setInterval(()=>{if(document.visibilityState==='visible'&&user&&Date.now()-lastPoll>(chatOpen?4500:30000))pollMsgs()},4000);
+
 /* ===== KHỞI ĐỘNG: hiện giao diện ngay từ dữ liệu trên máy, đồng bộ ở nền ===== */
 let swReg=null;
 if('serviceWorker' in navigator){
@@ -852,7 +974,7 @@ setInterval(()=>{if(document.visibilityState==='visible'&&user&&!syncing&&(isDir
 /* Kéo màn hình xuống để làm mới (không áp dụng trên bản đồ và hộp thoại) */
 (function(){
   const el=$('#ptr');let y0=0,on=false,d=0;
-  const skip=t=>t.closest&&t.closest('#mapwrap,dialog');
+  const skip=t=>t.closest&&t.closest('#mapwrap,#chat,dialog');
   const hide=()=>{el.style.transform='translate(-50%,-150%)';el.style.opacity=0};
   addEventListener('touchstart',e=>{on=false;if(!user||scrollY>0||e.touches.length!==1||skip(e.target))return;y0=e.touches[0].clientY;on=true;d=0},{passive:true});
   addEventListener('touchmove',e=>{
